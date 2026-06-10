@@ -217,47 +217,53 @@ function App() {
             Currently taking blood pressure medication
           </label>
 
-          <section className="advanced-section">
-            <div className="advanced-heading">
-              <h3>Advanced Risk Factors</h3>
-              <p>Optional. Leave these collapsed if you only want the basic assessment.</p>
+          <details className="advanced-section">
+            <summary className="advanced-summary">
+              <span>Advanced Risk Factors</span>
+              <small>Optional labs, history, and cardiac tests</small>
+            </summary>
+            <div className="advanced-content">
+              <p>
+                Add these only if you already have them. The basic assessment works without
+                any advanced values.
+              </p>
+              <details className="advanced-group">
+                <summary>Clinical history</summary>
+                <div className="checkbox-grid">
+                  <OptionalCheckbox label="Family history of premature ASCVD" checked={answers.family_history_premature_ascvd} onChange={(value) => updateAnswer("family_history_premature_ascvd", value)} />
+                  <OptionalCheckbox label="Chronic kidney disease" checked={answers.chronic_kidney_disease} onChange={(value) => updateAnswer("chronic_kidney_disease", value)} />
+                  <OptionalCheckbox label="Metabolic syndrome" checked={answers.metabolic_syndrome} onChange={(value) => updateAnswer("metabolic_syndrome", value)} />
+                  <OptionalCheckbox label="Chronic inflammatory condition" checked={answers.inflammatory_condition} onChange={(value) => updateAnswer("inflammatory_condition", value)} />
+                  <OptionalCheckbox label="Premature menopause" checked={answers.premature_menopause} onChange={(value) => updateAnswer("premature_menopause", value)} />
+                  <OptionalCheckbox label="History of preeclampsia" checked={answers.preeclampsia_history} onChange={(value) => updateAnswer("preeclampsia_history", value)} />
+                  <OptionalCheckbox label="South Asian ancestry" checked={answers.south_asian_ancestry} onChange={(value) => updateAnswer("south_asian_ancestry", value)} />
+                </div>
+              </details>
+              <details className="advanced-group">
+                <summary>Advanced labs</summary>
+                <div className="field-grid">
+                  <OptionalNumberField label="Lp(a)" value={answers.lpa_mg_dl} min={0} max={500} step="0.1" unit="mg/dL" onChange={(value) => updateAnswer("lpa_mg_dl", value)} />
+                  <OptionalNumberField label="ApoB" value={answers.apob_mg_dl} min={20} max={300} unit="mg/dL" onChange={(value) => updateAnswer("apob_mg_dl", value)} />
+                  <OptionalNumberField label="hs-CRP" value={answers.hs_crp_mg_l} min={0} max={100} step="0.1" unit="mg/L" onChange={(value) => updateAnswer("hs_crp_mg_l", value)} />
+                  <OptionalNumberField label="A1c" value={answers.a1c_percent} min={3} max={18} step="0.1" unit="%" onChange={(value) => updateAnswer("a1c_percent", value)} />
+                  <OptionalNumberField label="eGFR (mL/min/1.73 m2)" value={answers.egfr} min={0} max={150} onChange={(value) => updateAnswer("egfr", value)} />
+                  <OptionalNumberField label="Triglycerides" value={answers.triglycerides} min={20} max={3000} unit="mg/dL" onChange={(value) => updateAnswer("triglycerides", value)} />
+                </div>
+              </details>
+              <details className="advanced-group">
+                <summary>Cardiac tests</summary>
+                <div className="field-grid">
+                  <OptionalNumberField label="CAC score" value={answers.cac_score} min={0} max={5000} unit="Agatston" onChange={(value) => updateAnswer("cac_score", value)} />
+                  <OptionalNumberField label="Ankle-brachial index" value={answers.ankle_brachial_index} min={0} max={2.5} step="0.01" onChange={(value) => updateAnswer("ankle_brachial_index", value)} />
+                </div>
+                <div className="checkbox-grid compact">
+                  <OptionalCheckbox label="Carotid plaque documented" checked={answers.carotid_plaque} onChange={(value) => updateAnswer("carotid_plaque", value)} />
+                  <OptionalCheckbox label="LVH on ECG/echo" checked={answers.left_ventricular_hypertrophy} onChange={(value) => updateAnswer("left_ventricular_hypertrophy", value)} />
+                  <OptionalCheckbox label="History of atrial fibrillation" checked={answers.atrial_fibrillation_history} onChange={(value) => updateAnswer("atrial_fibrillation_history", value)} />
+                </div>
+              </details>
             </div>
-            <details>
-              <summary>Clinical history</summary>
-              <div className="checkbox-grid">
-                <OptionalCheckbox label="Family history of premature ASCVD" checked={answers.family_history_premature_ascvd} onChange={(value) => updateAnswer("family_history_premature_ascvd", value)} />
-                <OptionalCheckbox label="Chronic kidney disease" checked={answers.chronic_kidney_disease} onChange={(value) => updateAnswer("chronic_kidney_disease", value)} />
-                <OptionalCheckbox label="Metabolic syndrome" checked={answers.metabolic_syndrome} onChange={(value) => updateAnswer("metabolic_syndrome", value)} />
-                <OptionalCheckbox label="Chronic inflammatory condition" checked={answers.inflammatory_condition} onChange={(value) => updateAnswer("inflammatory_condition", value)} />
-                <OptionalCheckbox label="Premature menopause" checked={answers.premature_menopause} onChange={(value) => updateAnswer("premature_menopause", value)} />
-                <OptionalCheckbox label="History of preeclampsia" checked={answers.preeclampsia_history} onChange={(value) => updateAnswer("preeclampsia_history", value)} />
-                <OptionalCheckbox label="South Asian ancestry" checked={answers.south_asian_ancestry} onChange={(value) => updateAnswer("south_asian_ancestry", value)} />
-              </div>
-            </details>
-            <details>
-              <summary>Advanced labs</summary>
-              <div className="field-grid">
-                <OptionalNumberField label="Lp(a)" value={answers.lpa_mg_dl} min={0} max={500} step="0.1" unit="mg/dL" onChange={(value) => updateAnswer("lpa_mg_dl", value)} />
-                <OptionalNumberField label="ApoB" value={answers.apob_mg_dl} min={20} max={300} unit="mg/dL" onChange={(value) => updateAnswer("apob_mg_dl", value)} />
-                <OptionalNumberField label="hs-CRP" value={answers.hs_crp_mg_l} min={0} max={100} step="0.1" unit="mg/L" onChange={(value) => updateAnswer("hs_crp_mg_l", value)} />
-                <OptionalNumberField label="A1c" value={answers.a1c_percent} min={3} max={18} step="0.1" unit="%" onChange={(value) => updateAnswer("a1c_percent", value)} />
-                <OptionalNumberField label="eGFR (mL/min/1.73 m2)" value={answers.egfr} min={0} max={150} onChange={(value) => updateAnswer("egfr", value)} />
-                <OptionalNumberField label="Triglycerides" value={answers.triglycerides} min={20} max={3000} unit="mg/dL" onChange={(value) => updateAnswer("triglycerides", value)} />
-              </div>
-            </details>
-            <details>
-              <summary>Cardiac tests</summary>
-              <div className="field-grid">
-                <OptionalNumberField label="CAC score" value={answers.cac_score} min={0} max={5000} unit="Agatston" onChange={(value) => updateAnswer("cac_score", value)} />
-                <OptionalNumberField label="Ankle-brachial index" value={answers.ankle_brachial_index} min={0} max={2.5} step="0.01" onChange={(value) => updateAnswer("ankle_brachial_index", value)} />
-              </div>
-              <div className="checkbox-grid compact">
-                <OptionalCheckbox label="Carotid plaque documented" checked={answers.carotid_plaque} onChange={(value) => updateAnswer("carotid_plaque", value)} />
-                <OptionalCheckbox label="LVH on ECG/echo" checked={answers.left_ventricular_hypertrophy} onChange={(value) => updateAnswer("left_ventricular_hypertrophy", value)} />
-                <OptionalCheckbox label="History of atrial fibrillation" checked={answers.atrial_fibrillation_history} onChange={(value) => updateAnswer("atrial_fibrillation_history", value)} />
-              </div>
-            </details>
-          </section>
+          </details>
 
           {error ? <p className="error">{error}</p> : null}
 
