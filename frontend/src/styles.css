@@ -428,20 +428,27 @@ select:focus {
 }
 
 .score-card {
+  display: block;
+  width: 100%;
   min-height: 112px;
   padding: 16px;
+  color: inherit;
+  text-align: left;
   border: 1px solid var(--surface-border);
   border-left: 5px solid var(--brand);
   border-radius: 8px;
   background: var(--surface);
+  cursor: pointer;
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
 }
 
-.score-card:hover {
+.score-card:hover,
+.score-card:focus-visible {
   box-shadow: 0 10px 28px var(--surface-shadow);
+  outline: 3px solid var(--brand-focus);
   transform: translateY(-2px);
 }
 
@@ -731,6 +738,93 @@ select:focus {
   color: var(--text-primary);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgb(39 36 35 / 42%);
+  backdrop-filter: blur(5px);
+  animation: fade-in 180ms ease both;
+}
+
+.insight-modal {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  box-shadow: 0 22px 70px rgb(39 36 35 / 24%);
+  animation: modal-in 220ms ease both;
+}
+
+.insight-modal > span {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.insight-modal h2 {
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  font-size: 1.45rem;
+}
+
+.insight-modal p {
+  margin-bottom: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.modal-note {
+  margin-top: 14px !important;
+  padding-top: 14px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--summary-surface);
+  border: 1px solid var(--summary-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease;
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+  color: var(--brand);
+  border-color: var(--brand);
+  outline: 3px solid var(--brand-focus);
+  transform: translateY(-1px);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -740,6 +834,18 @@ select:focus {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { FormEvent, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { Activity, HeartPulse, ShieldCheck } from "lucide-react";
+import { Activity, HeartPulse, ShieldCheck, X } from "lucide-react";
 
 import {
   NumberField,
@@ -23,6 +23,13 @@ import { applyTheme, type ThemeName } from "./theme";
 import type { AssessmentAnswers, ContentSummary, ResultResponse } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
+
+type ScoreInsight = {
+  title: string;
+  eyebrow: string;
+  body: string;
+  note: string;
+};
 
 const initialAnswers: AssessmentAnswers = {
   age: 52,
@@ -56,6 +63,56 @@ const initialAnswers: AssessmentAnswers = {
   atrial_fibrillation_history: null,
 };
 
+function formatSexLabel(sex: AssessmentAnswers["sex"]) {
+  return sex === "female" ? "female" : "male";
+}
+
+function buildScoreInsight(
+  score: "ascvd" | "framingham" | "heartAge",
+  result: ResultResponse,
+  answers: AssessmentAnswers,
+): ScoreInsight {
+  if (score === "ascvd") {
+    return {
+      title: "10-year ASCVD risk",
+      eyebrow: `${result.scores.ascvd_risk}% estimated risk`,
+      body: `Based on the values you entered for a ${answers.age}-year-old ${formatSexLabel(
+        answers.sex,
+      )}, this estimates the chance of a first major atherosclerotic cardiovascular event over the next 10 years. It weighs core inputs like blood pressure, cholesterol, smoking status, and diabetes.`,
+      note: `Your current result is categorized as ${result.scores.category}. Use this as a conversation starter with a clinician, especially if advanced risk factors or family history apply.`,
+    };
+  }
+
+  if (score === "framingham") {
+    return {
+      title: "Framingham-style risk",
+      eyebrow: `${result.scores.framingham_risk}% estimated risk`,
+      body: `This gives a second prevention-oriented view using a Framingham-inspired approach. It helps compare whether your overall pattern looks similar across risk models rather than depending on one number alone.`,
+      note: `For your entered profile, this estimate is ${
+        result.scores.framingham_risk > result.scores.ascvd_risk ? "higher than" : "close to"
+      } the ASCVD-style result, so it is worth reviewing the inputs that are driving the difference.`,
+    };
+  }
+
+  const heartAgeDelta = result.scores.heart_age - answers.age;
+  const direction =
+    heartAgeDelta > 0
+      ? `${heartAgeDelta} years above`
+      : heartAgeDelta < 0
+        ? `${Math.abs(heartAgeDelta)} years below`
+        : "the same as";
+
+  return {
+    title: "Heart age",
+    eyebrow: `${result.scores.heart_age} years`,
+    body: `Heart age translates your risk factor pattern into an age-like comparison. For your entered age of ${answers.age}, this result is ${direction} your current age.`,
+    note:
+      heartAgeDelta > 0
+        ? "That does not mean your heart is literally that age. It means the current risk-factor pattern looks less favorable than expected for your age."
+        : "That does not mean there is no risk. It means the current risk-factor pattern looks relatively favorable for your age.",
+  };
+}
+
 function App() {
   const [answers, setAnswers] = useState<AssessmentAnswers>(initialAnswers);
   const [result, setResult] = useState<ResultResponse | null>(null);
@@ -64,10 +121,22 @@ function App() {
   const [loadingContentId, setLoadingContentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemeName>("light");
+  const [scoreInsight, setScoreInsight] = useState<ScoreInsight | null>(null);
 
   React.useEffect(() => {
     applyTheme(theme);
   }, [theme]);
+
+  React.useEffect(() => {
+    if (!scoreInsight) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setScoreInsight(null);
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [scoreInsight]);
 
   const categoryLabel = useMemo(() => {
     if (!result) return null;
@@ -427,17 +496,22 @@ function App() {
                   label="10-year ASCVD risk"
                   value={`${result.scores.ascvd_risk}%`}
                   tone={ascvdTone(result.scores.ascvd_risk)}
+                  onClick={() => setScoreInsight(buildScoreInsight("ascvd", result, answers))}
                 />
                 <ScoreCard
                   label="Framingham-style risk"
                   value={`${result.scores.framingham_risk}%`}
                   tone={framinghamTone(result.scores.framingham_risk)}
+                  onClick={() =>
+                    setScoreInsight(buildScoreInsight("framingham", result, answers))
+                  }
                 />
                 <ScoreCard
                   label="Heart age"
                   value={`${result.scores.heart_age}`}
                   helper={heartAgeHelper(result.scores.heart_age, answers.age)}
                   tone={heartAgeTone(result.scores.heart_age, answers.age)}
+                  onClick={() => setScoreInsight(buildScoreInsight("heartAge", result, answers))}
                 />
               </div>
 
@@ -498,6 +572,31 @@ function App() {
           )}
         </section>
       </section>
+
+      {scoreInsight ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setScoreInsight(null)}>
+          <section
+            className="insight-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="score-insight-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label="Close explanation"
+              onClick={() => setScoreInsight(null)}
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+            <span>{scoreInsight.eyebrow}</span>
+            <h2 id="score-insight-title">{scoreInsight.title}</h2>
+            <p>{scoreInsight.body}</p>
+            <p className="modal-note">{scoreInsight.note}</p>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

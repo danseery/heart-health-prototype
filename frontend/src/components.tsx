@@ -124,13 +124,24 @@ export function SubmitButton(props: { isSubmitting: boolean }) {
   );
 }
 
-export function ScoreCard(props: { label: string; value: string; helper?: string; tone: string }) {
+export function ScoreCard(props: {
+  label: string;
+  value: string;
+  helper?: string;
+  tone: string;
+  onClick?: () => void;
+}) {
   return (
-    <article className={`score-card tone-${props.tone}`}>
+    <button
+      className={`score-card tone-${props.tone}`}
+      type="button"
+      onClick={props.onClick}
+      aria-label={`Learn about ${props.label}`}
+    >
       <span>{props.label}</span>
       <strong>{props.value}</strong>
       {props.helper ? <small>{props.helper}</small> : null}
-    </article>
+    </button>
   );
 }
 
