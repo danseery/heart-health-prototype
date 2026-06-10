@@ -57,3 +57,16 @@ def test_rejects_out_of_range_health_values() -> None:
             },
         )
         assert response.status_code == 422
+
+
+def test_content_summary_is_generated_then_cached() -> None:
+    with client:
+        first = client.get("/api/content/content_cholesterol_basics/summary")
+        assert first.status_code == 200
+        assert first.json()["cached"] is False
+        assert "Understanding LDL and HDL Cholesterol" in first.json()["title"]
+
+        second = client.get("/api/content/content_cholesterol_basics/summary")
+        assert second.status_code == 200
+        assert second.json()["cached"] is True
+        assert second.json()["summary"] == first.json()["summary"]

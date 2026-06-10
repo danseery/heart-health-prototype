@@ -169,6 +169,25 @@ class ContentItem(Base):
     )
 
 
+class ContentSummary(Base):
+    __tablename__ = "content_summaries"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    content_item_id: Mapped[str] = mapped_column(
+        ForeignKey("content_items.id"),
+        unique=True,
+        nullable=False,
+    )
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    generated_by: Mapped[str] = mapped_column(String, default="dummy", nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    data_classification: Mapped[str] = mapped_column(
+        String,
+        default=DataClassification.PUBLIC,
+        nullable=False,
+    )
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

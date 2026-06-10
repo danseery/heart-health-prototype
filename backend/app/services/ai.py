@@ -36,3 +36,11 @@ def generate_assessment_summary(answers: AnswerPayload, risk: dict) -> dict:
             },
         ],
     }
+
+
+def generate_content_summary(title: str, body: str) -> str:
+    return (
+        f"{title}: {body} In practical terms, this topic helps frame what a "
+        "patient may want to ask their clinician, which values matter, and why "
+        "a single number should be interpreted alongside the full risk profile."
+    )

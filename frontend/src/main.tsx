@@ -44,6 +44,15 @@ type ResultResponse = {
   };
 };
 
+type ContentSummary = {
+  content_id: string;
+  title: string;
+  topic: string;
+  author: string;
+  summary: string;
+  cached: boolean;
+};
+
 const initialAnswers: AssessmentAnswers = {
   age: 52,
   sex: "female",
@@ -60,7 +69,9 @@ const initialAnswers: AssessmentAnswers = {
 function App() {
   const [answers, setAnswers] = useState<AssessmentAnswers>(initialAnswers);
   const [result, setResult] = useState<ResultResponse | null>(null);
+  const [contentSummary, setContentSummary] = useState<ContentSummary | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingContentId, setLoadingContentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const categoryLabel = useMemo(() => {
@@ -107,6 +118,20 @@ function App() {
     value: AssessmentAnswers[Key],
   ) {
     setAnswers((current) => ({ ...current, [key]: value }));
+  }
+
+  async function openContentSummary(contentId: string) {
+    setLoadingContentId(contentId);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/content/${contentId}/summary`);
+      if (!response.ok) throw new Error("Could not load content summary.");
+      setContentSummary((await response.json()) as ContentSummary);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoadingContentId(null);
+    }
   }
 
   return (
@@ -175,9 +200,22 @@ function App() {
                 </div>
               </div>
               <div className="score-grid">
-                <ScoreCard label="10-year ASCVD risk" value={`${result.scores.ascvd_risk}%`} tone={result.scores.category} />
-                <ScoreCard label="Framingham-style risk" value={`${result.scores.framingham_risk}%`} tone="intermediate" />
-                <ScoreCard label="Heart age" value={`${result.scores.heart_age}`} helper="years" tone="borderline" />
+                <ScoreCard
+                  label="10-year ASCVD risk"
+                  value={`${result.scores.ascvd_risk}%`}
+                  tone={ascvdTone(result.scores.ascvd_risk)}
+                />
+                <ScoreCard
+                  label="Framingham-style risk"
+                  value={`${result.scores.framingham_risk}%`}
+                  tone={framinghamTone(result.scores.framingham_risk)}
+                />
+                <ScoreCard
+                  label="Heart age"
+                  value={`${result.scores.heart_age}`}
+                  helper={heartAgeHelper(result.scores.heart_age, answers.age)}
+                  tone={heartAgeTone(result.scores.heart_age, answers.age)}
+                />
               </div>
               <div className="risk-list">
                 <h3>Your Risk Factors</h3>
@@ -196,11 +234,32 @@ function App() {
                 <p>{result.ai_report.summary}</p>
                 <div className="citations">
                   {result.ai_report.citations.map((citation) => (
-                    <span key={citation.source_id}>{citation.title}</span>
+                    <button
+                      key={citation.source_id}
+                      type="button"
+                      onClick={() => openContentSummary(citation.source_id)}
+                    >
+                      {loadingContentId === citation.source_id ? "Loading..." : citation.title}
+                    </button>
                   ))}
                 </div>
                 <p className="disclaimer">{result.ai_report.disclaimer}</p>
               </div>
+              {contentSummary ? (
+                <aside className="content-summary">
+                  <div>
+                    <span>{contentSummary.topic}</span>
+                    <button type="button" onClick={() => setContentSummary(null)}>
+                      Close
+                    </button>
+                  </div>
+                  <h3>{contentSummary.title}</h3>
+                  <p>{contentSummary.summary}</p>
+                  <small>
+                    {contentSummary.author} - {contentSummary.cached ? "Cached summary" : "Summary cached"}
+                  </small>
+                </aside>
+              ) : null}
             </>
           ) : (
             <div className="empty-state">
@@ -271,6 +330,34 @@ function ScoreCard(props: { label: string; value: string; helper?: string; tone:
       {props.helper ? <small>{props.helper}</small> : null}
     </article>
   );
+}
+
+function ascvdTone(risk: number) {
+  if (risk < 5) return "green";
+  if (risk < 7.5) return "yellow";
+  if (risk < 20) return "orange";
+  return "red";
+}
+
+function framinghamTone(risk: number) {
+  if (risk < 5) return "green";
+  if (risk < 10) return "yellow";
+  if (risk < 20) return "orange";
+  return "red";
+}
+
+function heartAgeTone(heartAge: number, actualAge: number) {
+  const delta = heartAge - actualAge;
+  if (delta <= 0) return "green";
+  if (delta <= 5) return "yellow";
+  if (delta <= 10) return "orange";
+  return "red";
+}
+
+function heartAgeHelper(heartAge: number, actualAge: number) {
+  const delta = heartAge - actualAge;
+  if (delta <= 0) return "at or below age";
+  return `+${delta} years`;
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

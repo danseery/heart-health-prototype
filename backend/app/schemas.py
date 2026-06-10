@@ -68,6 +68,15 @@ class Citation(BaseModel):
     author: str
 
 
+class ContentSummaryResponse(BaseModel):
+    content_id: str
+    title: str
+    topic: str
+    author: str
+    summary: str
+    cached: bool
+
+
 class AIReportResponse(BaseModel):
     summary: str
     disclaimer: str
