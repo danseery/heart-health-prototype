@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { normalizeNumberInput } from "./riskDisplay";
@@ -28,6 +29,12 @@ export function NumberField(props: {
   unit?: string;
   onChange: (value: number) => void;
 }) {
+  const [draftValue, setDraftValue] = useState(String(props.value));
+
+  useEffect(() => {
+    setDraftValue(String(props.value));
+  }, [props.value]);
+
   return (
     <label className="field">
       <span>{props.label}</span>
@@ -35,12 +42,23 @@ export function NumberField(props: {
         <input
           type="text"
           inputMode="decimal"
-          value={props.value}
+          value={draftValue}
           onChange={(event) => {
-            const normalized = normalizeNumberInput(event.target.value);
+            const nextValue = event.target.value;
+            const normalized = normalizeNumberInput(nextValue);
+            setDraftValue(nextValue);
             if (normalized !== null) props.onChange(normalized);
           }}
-          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value) ?? props.min)}
+          onBlur={(event) => {
+            const normalized = normalizeNumberInput(event.target.value);
+            if (normalized === null) {
+              setDraftValue(String(props.value));
+              return;
+            }
+
+            props.onChange(normalized);
+            setDraftValue(String(normalized));
+          }}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
@@ -57,6 +75,12 @@ export function OptionalNumberField(props: {
   unit?: string;
   onChange: (value: number | null) => void;
 }) {
+  const [draftValue, setDraftValue] = useState(props.value?.toString() ?? "");
+
+  useEffect(() => {
+    setDraftValue(props.value?.toString() ?? "");
+  }, [props.value]);
+
   return (
     <label className="field">
       <span>{props.label}</span>
@@ -64,13 +88,20 @@ export function OptionalNumberField(props: {
         <input
           type="text"
           inputMode="decimal"
-          value={props.value ?? ""}
+          value={draftValue}
           placeholder="Optional"
           onChange={(event) => {
-            const normalized = normalizeNumberInput(event.target.value);
-            props.onChange(event.target.value === "" ? null : normalized);
+            const nextValue = event.target.value;
+            const normalized = normalizeNumberInput(nextValue);
+            setDraftValue(nextValue);
+            if (nextValue === "") props.onChange(null);
+            if (normalized !== null) props.onChange(normalized);
           }}
-          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value))}
+          onBlur={(event) => {
+            const normalized = normalizeNumberInput(event.target.value);
+            props.onChange(normalized);
+            setDraftValue(normalized?.toString() ?? "");
+          }}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
