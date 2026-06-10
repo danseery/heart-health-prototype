@@ -233,6 +233,12 @@ h1 {
   font-weight: 700;
 }
 
+.field-error {
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 input,
 select {
   width: 100%;
@@ -260,6 +266,11 @@ input:focus,
 select:focus {
   border-color: var(--brand);
   outline: 3px solid var(--brand-focus);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 :root[data-theme="dark"] input:focus,

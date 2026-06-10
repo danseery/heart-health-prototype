@@ -1,11 +1,11 @@
 export type AssessmentAnswers = {
-  age: number;
+  age: number | null;
   sex: "female" | "male";
-  systolic_bp: number;
-  diastolic_bp: number;
-  total_cholesterol: number;
-  hdl_cholesterol: number;
-  ldl_cholesterol: number;
+  systolic_bp: number | null;
+  diastolic_bp: number | null;
+  total_cholesterol: number | null;
+  hdl_cholesterol: number | null;
+  ldl_cholesterol: number | null;
   on_bp_medication: boolean;
   smoking_status: "never" | "former" | "current";
   diabetes: "no" | "yes" | "not_sure";

@@ -63,6 +63,15 @@ const initialAnswers: AssessmentAnswers = {
   atrial_fibrillation_history: null,
 };
 
+const requiredNumericFields = [
+  ["age", "Age"],
+  ["systolic_bp", "Systolic BP"],
+  ["diastolic_bp", "Diastolic BP"],
+  ["total_cholesterol", "Total cholesterol"],
+  ["hdl_cholesterol", "HDL cholesterol"],
+  ["ldl_cholesterol", "LDL cholesterol"],
+] as const satisfies ReadonlyArray<[keyof AssessmentAnswers, string]>;
+
 function formatSexLabel(sex: AssessmentAnswers["sex"]) {
   return sex === "female" ? "female" : "male";
 }
@@ -73,10 +82,11 @@ function buildScoreInsight(
   answers: AssessmentAnswers,
 ): ScoreInsight {
   if (score === "ascvd") {
+    const age = answers.age ?? 0;
     return {
       title: "10-year ASCVD risk",
       eyebrow: `${result.scores.ascvd_risk}% estimated risk`,
-      body: `Based on the values you entered for a ${answers.age}-year-old ${formatSexLabel(
+      body: `Based on the values you entered for a ${age}-year-old ${formatSexLabel(
         answers.sex,
       )}, this estimates the chance of a first major atherosclerotic cardiovascular event over the next 10 years. It weighs core inputs like blood pressure, cholesterol, smoking status, and diabetes.`,
       note: `Your current result is categorized as ${result.scores.category}. Use this as a conversation starter with a clinician, especially if advanced risk factors or family history apply.`,
@@ -94,7 +104,8 @@ function buildScoreInsight(
     };
   }
 
-  const heartAgeDelta = result.scores.heart_age - answers.age;
+  const age = answers.age ?? 0;
+  const heartAgeDelta = result.scores.heart_age - age;
   const direction =
     heartAgeDelta > 0
       ? `${heartAgeDelta} years above`
@@ -105,7 +116,7 @@ function buildScoreInsight(
   return {
     title: "Heart age",
     eyebrow: `${result.scores.heart_age} years`,
-    body: `Heart age translates your risk factor pattern into an age-like comparison. For your entered age of ${answers.age}, this result is ${direction} your current age.`,
+    body: `Heart age translates your risk factor pattern into an age-like comparison. For your entered age of ${age}, this result is ${direction} your current age.`,
     note:
       heartAgeDelta > 0
         ? "That does not mean your heart is literally that age. It means the current risk-factor pattern looks less favorable than expected for your age."
@@ -120,6 +131,9 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingContentId, setLoadingContentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AssessmentAnswers, string>>>(
+    {},
+  );
   const [theme, setTheme] = useState<ThemeName>("light");
   const [scoreInsight, setScoreInsight] = useState<ScoreInsight | null>(null);
 
@@ -145,8 +159,25 @@ function App() {
 
   async function submitAssessment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const nextFieldErrors = requiredNumericFields.reduce(
+      (accumulator, [key, label]) => {
+        if (answers[key] === null) {
+          accumulator[key] = `${label} is required before calculating.`;
+        }
+        return accumulator;
+      },
+      {} as Partial<Record<keyof AssessmentAnswers, string>>,
+    );
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors);
+      setError("Please fill in the highlighted numeric fields.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+    setFieldErrors({});
     try {
       const sessionResponse = await fetch(`${API_BASE}/assessment/sessions`, {
         method: "POST",
@@ -182,6 +213,7 @@ function App() {
     value: AssessmentAnswers[Key],
   ) {
     setAnswers((current) => ({ ...current, [key]: value }));
+    setFieldErrors((current) => ({ ...current, [key]: undefined }));
   }
 
   async function openContentSummary(contentId: string) {
@@ -235,8 +267,7 @@ function App() {
             <NumberField
               label="Age"
               value={answers.age}
-              min={18}
-              max={100}
+              error={fieldErrors.age}
               onChange={(value) => updateAnswer("age", value)}
             />
             <SelectField
@@ -251,41 +282,36 @@ function App() {
             <NumberField
               label="Systolic BP"
               value={answers.systolic_bp}
-              min={70}
-              max={260}
               unit="mmHg"
+              error={fieldErrors.systolic_bp}
               onChange={(value) => updateAnswer("systolic_bp", value)}
             />
             <NumberField
               label="Diastolic BP"
               value={answers.diastolic_bp}
-              min={30}
-              max={160}
               unit="mmHg"
+              error={fieldErrors.diastolic_bp}
               onChange={(value) => updateAnswer("diastolic_bp", value)}
             />
             <NumberField
               label="Total cholesterol"
               value={answers.total_cholesterol}
-              min={50}
-              max={500}
               unit="mg/dL"
+              error={fieldErrors.total_cholesterol}
               onChange={(value) => updateAnswer("total_cholesterol", value)}
             />
             <NumberField
               label="HDL cholesterol"
               value={answers.hdl_cholesterol}
-              min={10}
-              max={150}
               unit="mg/dL"
+              error={fieldErrors.hdl_cholesterol}
               onChange={(value) => updateAnswer("hdl_cholesterol", value)}
             />
             <NumberField
               label="LDL cholesterol"
               value={answers.ldl_cholesterol}
-              min={0}
-              max={400}
               unit="mg/dL"
+              error={fieldErrors.ldl_cholesterol}
               onChange={(value) => updateAnswer("ldl_cholesterol", value)}
             />
             <SelectField
@@ -385,50 +411,35 @@ function App() {
                   <OptionalNumberField
                     label="Lp(a)"
                     value={answers.lpa_mg_dl}
-                    min={0}
-                    max={500}
-                    step="0.1"
                     unit="mg/dL"
                     onChange={(value) => updateAnswer("lpa_mg_dl", value)}
                   />
                   <OptionalNumberField
                     label="ApoB"
                     value={answers.apob_mg_dl}
-                    min={20}
-                    max={300}
                     unit="mg/dL"
                     onChange={(value) => updateAnswer("apob_mg_dl", value)}
                   />
                   <OptionalNumberField
                     label="hs-CRP"
                     value={answers.hs_crp_mg_l}
-                    min={0}
-                    max={100}
-                    step="0.1"
                     unit="mg/L"
                     onChange={(value) => updateAnswer("hs_crp_mg_l", value)}
                   />
                   <OptionalNumberField
                     label="A1c"
                     value={answers.a1c_percent}
-                    min={3}
-                    max={18}
-                    step="0.1"
                     unit="%"
                     onChange={(value) => updateAnswer("a1c_percent", value)}
                   />
                   <OptionalNumberField
                     label="eGFR (mL/min/1.73 m2)"
                     value={answers.egfr}
-                    min={0}
-                    max={150}
                     onChange={(value) => updateAnswer("egfr", value)}
                   />
                   <OptionalNumberField
                     label="Triglycerides"
                     value={answers.triglycerides}
-                    min={20}
-                    max={3000}
                     unit="mg/dL"
                     onChange={(value) => updateAnswer("triglycerides", value)}
                   />
@@ -441,17 +452,12 @@ function App() {
                   <OptionalNumberField
                     label="CAC score"
                     value={answers.cac_score}
-                    min={0}
-                    max={5000}
                     unit="Agatston"
                     onChange={(value) => updateAnswer("cac_score", value)}
                   />
                   <OptionalNumberField
                     label="Ankle-brachial index"
                     value={answers.ankle_brachial_index}
-                    min={0}
-                    max={2.5}
-                    step="0.01"
                     onChange={(value) => updateAnswer("ankle_brachial_index", value)}
                   />
                 </div>
@@ -509,8 +515,8 @@ function App() {
                 <ScoreCard
                   label="Heart age"
                   value={`${result.scores.heart_age}`}
-                  helper={heartAgeHelper(result.scores.heart_age, answers.age)}
-                  tone={heartAgeTone(result.scores.heart_age, answers.age)}
+                  helper={heartAgeHelper(result.scores.heart_age, answers.age ?? 0)}
+                  tone={heartAgeTone(result.scores.heart_age, answers.age ?? 0)}
                   onClick={() => setScoreInsight(buildScoreInsight("heartAge", result, answers))}
                 />
               </div>

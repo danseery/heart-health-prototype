@@ -23,16 +23,15 @@ export function ThemeToggle(props: { checked: boolean; onChange: (checked: boole
 
 export function NumberField(props: {
   label: string;
-  value: number;
-  min: number;
-  max: number;
+  value: number | null;
   unit?: string;
-  onChange: (value: number) => void;
+  error?: string;
+  onChange: (value: number | null) => void;
 }) {
-  const [draftValue, setDraftValue] = useState(String(props.value));
+  const [draftValue, setDraftValue] = useState(props.value?.toString() ?? "");
 
   useEffect(() => {
-    setDraftValue(String(props.value));
+    setDraftValue(props.value?.toString() ?? "");
   }, [props.value]);
 
   return (
@@ -47,21 +46,18 @@ export function NumberField(props: {
             const nextValue = event.target.value;
             const normalized = normalizeNumberInput(nextValue);
             setDraftValue(nextValue);
-            if (normalized !== null) props.onChange(normalized);
+            props.onChange(nextValue === "" ? null : normalized);
           }}
           onBlur={(event) => {
             const normalized = normalizeNumberInput(event.target.value);
-            if (normalized === null) {
-              setDraftValue(String(props.value));
-              return;
-            }
-
             props.onChange(normalized);
-            setDraftValue(String(normalized));
+            setDraftValue(normalized === null ? "" : String(normalized));
           }}
+          aria-invalid={props.error ? "true" : "false"}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
+      {props.error ? <small className="field-error">{props.error}</small> : null}
     </label>
   );
 }
@@ -69,10 +65,8 @@ export function NumberField(props: {
 export function OptionalNumberField(props: {
   label: string;
   value: number | null;
-  min: number;
-  max: number;
-  step?: string;
   unit?: string;
+  error?: string;
   onChange: (value: number | null) => void;
 }) {
   const [draftValue, setDraftValue] = useState(props.value?.toString() ?? "");
@@ -94,17 +88,18 @@ export function OptionalNumberField(props: {
             const nextValue = event.target.value;
             const normalized = normalizeNumberInput(nextValue);
             setDraftValue(nextValue);
-            if (nextValue === "") props.onChange(null);
-            if (normalized !== null) props.onChange(normalized);
+            props.onChange(nextValue === "" ? null : normalized);
           }}
           onBlur={(event) => {
             const normalized = normalizeNumberInput(event.target.value);
             props.onChange(normalized);
             setDraftValue(normalized?.toString() ?? "");
           }}
+          aria-invalid={props.error ? "true" : "false"}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
+      {props.error ? <small className="field-error">{props.error}</small> : null}
     </label>
   );
 }
