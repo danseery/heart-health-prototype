@@ -456,6 +456,20 @@ function App() {
                   ))}
                 </div>
                 <p className="disclaimer">{result.ai_report.disclaimer}</p>
+
+                {contentSummary ? (
+                  <aside className="content-summary content-summary--inline">
+                    <div>
+                      <span>{contentSummary.topic}</span>
+                      <button type="button" onClick={() => setContentSummary(null)}>
+                        Close
+                      </button>
+                    </div>
+                    <h3>{contentSummary.title}</h3>
+                    <p>{contentSummary.summary}</p>
+                    <small>{contentSummary.author}</small>
+                  </aside>
+                ) : null}
               </div>
 
               <div className="signal-grid">
@@ -471,20 +485,6 @@ function App() {
                   variant="risk"
                 />
               </div>
-
-              {contentSummary ? (
-                <aside className="content-summary">
-                  <div>
-                    <span>{contentSummary.topic}</span>
-                    <button type="button" onClick={() => setContentSummary(null)}>
-                      Close
-                    </button>
-                  </div>
-                  <h3>{contentSummary.title}</h3>
-                  <p>{contentSummary.summary}</p>
-                  <small>{contentSummary.author}</small>
-                </aside>
-              ) : null}
             </>
           ) : (
             <div className="empty-state">

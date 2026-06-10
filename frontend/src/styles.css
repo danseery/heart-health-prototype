@@ -671,6 +671,11 @@ select:focus {
   border-radius: 8px;
 }
 
+.content-summary--inline {
+  margin-top: 14px;
+  animation: rise-in 260ms ease both;
+}
+
 .content-summary div {
   display: flex;
   justify-content: space-between;
