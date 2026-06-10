@@ -19,11 +19,11 @@ select {
 
 .app-shell {
   min-height: 100vh;
-  padding: 32px;
+  padding: 28px 32px 38px;
 }
 
 .theme-switch {
-  margin: 0 auto 14px;
+  margin: 0 auto 10px;
   padding: 10px 14px;
   max-width: 1160px;
   display: flex;
@@ -111,17 +111,17 @@ select {
 
 .hero {
   display: grid;
-  grid-template-columns: 56px minmax(0, 850px);
-  gap: 18px;
+  grid-template-columns: 52px minmax(0, 760px);
+  gap: 16px;
   align-items: start;
   max-width: 1160px;
-  margin: 0 auto 28px;
+  margin: 0 auto 22px;
 }
 
 .brand-mark {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   place-items: center;
   color: #ffffff;
   background: var(--brand);
@@ -144,24 +144,25 @@ p {
 }
 
 h1 {
-  max-width: 860px;
-  margin-bottom: 18px;
-  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  max-width: 760px;
+  margin-bottom: 14px;
+  font-size: clamp(2.6rem, 5.5vw, 4.65rem);
   line-height: 1.02;
+  letter-spacing: 0;
 }
 
 .lede {
-  max-width: 760px;
+  max-width: 680px;
   margin-bottom: 0;
   color: var(--text-muted);
-  font-size: 1.14rem;
-  line-height: 1.65;
+  font-size: 1.03rem;
+  line-height: 1.58;
 }
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 0.95fr) minmax(340px, 1.05fr);
-  gap: 18px;
+  grid-template-columns: minmax(310px, 0.88fr) minmax(420px, 1.12fr);
+  gap: 20px;
   max-width: 1160px;
   margin: 0 auto;
   align-items: start;
@@ -174,14 +175,32 @@ h1 {
   border: 1px solid var(--surface-border);
   border-radius: 8px;
   box-shadow: 0 18px 55px var(--surface-shadow);
+  animation: rise-in 420ms ease both;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.results-panel {
+  overflow: hidden;
+}
+
+.assessment-panel:focus-within,
+.results-panel:focus-within {
+  border-color: color-mix(in srgb, var(--brand) 34%, var(--surface-border) 66%);
 }
 
 .panel-heading {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   color: var(--brand);
+}
+
+.results-heading {
+  margin-bottom: 16px;
 }
 
 .panel-heading h2 {
@@ -378,11 +397,15 @@ select:focus {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 800;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
 }
 
 .primary-button:hover,
 .primary-button:focus-visible {
   background: var(--brand-strong);
+  transform: translateY(-1px);
 }
 
 .primary-button:disabled {
@@ -411,6 +434,15 @@ select:focus {
   border-left: 5px solid var(--brand);
   border-radius: 8px;
   background: var(--surface);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.score-card:hover {
+  box-shadow: 0 10px 28px var(--surface-shadow);
+  transform: translateY(-2px);
 }
 
 .score-card span {
@@ -454,13 +486,32 @@ select:focus {
 
 .signal-section,
 .ai-summary {
-  margin-top: 22px;
+  margin-top: 16px;
+}
+
+.signal-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.signal-grid .signal-section {
+  margin-top: 0;
 }
 
 .signal-section {
   padding: 14px 16px 6px;
   border: 1px solid var(--surface-border);
   border-radius: 8px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.signal-section:hover {
+  box-shadow: 0 10px 26px var(--surface-shadow);
+  transform: translateY(-1px);
 }
 
 .signal-section--protective {
@@ -543,14 +594,37 @@ select:focus {
 }
 
 .ai-summary {
-  padding: 16px;
-  background: var(--summary-surface);
+  padding: 18px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--summary-surface) 92%, #ffffff 8%) 0%,
+      var(--summary-surface) 100%
+    );
   border: 1px solid var(--summary-border);
+  border-left: 5px solid var(--info);
   border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 42%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.ai-summary--featured {
+  margin-top: 16px;
+}
+
+.ai-summary:hover {
+  border-color: color-mix(in srgb, var(--info) 35%, var(--summary-border) 65%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 42%),
+    0 12px 30px var(--surface-shadow);
+  transform: translateY(-1px);
 }
 
 .ai-summary h3 {
-  color: var(--text-primary);
+  color: var(--info);
 }
 
 .citations {
@@ -570,6 +644,10 @@ select:focus {
   font-size: 0.78rem;
   font-weight: 800;
   text-align: left;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
 }
 
 .citations button:hover,
@@ -577,6 +655,7 @@ select:focus {
   color: var(--link-accent-strong);
   outline: 3px solid var(--brand-focus);
   text-decoration: underline;
+  transform: translateY(-1px);
 }
 
 .disclaimer {
@@ -647,6 +726,18 @@ select:focus {
   color: var(--text-primary);
 }
 
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 :root[data-theme="dark"] .panel-heading p,
 :root[data-theme="dark"] .lede,
 :root[data-theme="dark"] .signal-item p,
@@ -697,6 +788,11 @@ select:focus {
 
   .hero {
     grid-template-columns: 1fr;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.25rem, 12vw, 3.2rem);
   }
 
   .field-grid,
@@ -713,5 +809,15 @@ select:focus {
   .theme-switch {
     padding-left: 0;
     padding-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
   }
 }

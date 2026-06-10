@@ -144,11 +144,10 @@ function App() {
         </div>
         <div>
           <p className="eyebrow">HeartHealth AI</p>
-          <h1>Understand your heart health numbers in plain English.</h1>
+          <h1>Your heart health, translated.</h1>
           <p className="lede">
-            Review common cardiovascular risk factors, see how they shape an overall
-            prevention profile, and turn clinical-style inputs into clear next-step
-            questions for a healthcare conversation.
+            Review key cardiovascular inputs, spot meaningful signals, and prepare
+            clearer questions for your next healthcare conversation.
           </p>
         </div>
       </section>
@@ -415,10 +414,10 @@ function App() {
         <section className="results-panel" aria-live="polite">
           {result ? (
             <>
-              <div className="panel-heading">
+              <div className="panel-heading results-heading">
                 <ShieldCheck size={22} aria-hidden="true" />
                 <div>
-                  <h2>Results Dashboard</h2>
+                  <h2>Risk Snapshot</h2>
                   <p>{categoryLabel} risk category</p>
                 </div>
               </div>
@@ -442,19 +441,7 @@ function App() {
                 />
               </div>
 
-              <SignalSection
-                title="Protective Signals"
-                items={result.protective_signals ?? []}
-                variant="protective"
-              />
-
-              <SignalSection
-                title="Your Risk Factors"
-                items={result.risk_factors ?? []}
-                variant="risk"
-              />
-
-              <div className="ai-summary">
+              <div className="ai-summary ai-summary--featured">
                 <h3>AI Summary</h3>
                 <p>{result.ai_report.summary}</p>
                 <div className="citations">
@@ -469,6 +456,20 @@ function App() {
                   ))}
                 </div>
                 <p className="disclaimer">{result.ai_report.disclaimer}</p>
+              </div>
+
+              <div className="signal-grid">
+                <SignalSection
+                  title="Protective Signals"
+                  items={result.protective_signals ?? []}
+                  variant="protective"
+                />
+
+                <SignalSection
+                  title="Your Risk Factors"
+                  items={result.risk_factors ?? []}
+                  variant="risk"
+                />
               </div>
 
               {contentSummary ? (
@@ -490,8 +491,8 @@ function App() {
               <ShieldCheck size={34} aria-hidden="true" />
               <h2>Your results will appear here</h2>
               <p>
-                The backend will calculate risk signals, save a synthetic assessment,
-                and return a grounded educational summary.
+                Complete the assessment to see your score cards, key signals, and an
+                educational summary in one focused view.
               </p>
             </div>
           )}
