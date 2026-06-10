@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_env: str = Field(default="local", alias="APP_ENV")
-    app_name: str = Field(default="HeartHealth AI Prototype", alias="APP_NAME")
+    app_name: str = Field(default="HeartHealth AI", alias="APP_NAME")
     api_host: str = Field(default="127.0.0.1", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
     frontend_origins: str = Field(

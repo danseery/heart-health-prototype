@@ -1,41 +1,275 @@
-import React from "react";
+import React, { FormEvent, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { ShieldCheck } from "lucide-react";
+import { Activity, ArrowRight, HeartPulse, ShieldCheck } from "lucide-react";
 import "./styles.css";
 
+const API_BASE = "http://127.0.0.1:8000/api";
+
+type AssessmentAnswers = {
+  age: number;
+  sex: "female" | "male";
+  systolic_bp: number;
+  diastolic_bp: number;
+  total_cholesterol: number;
+  hdl_cholesterol: number;
+  ldl_cholesterol: number;
+  on_bp_medication: boolean;
+  smoking_status: "never" | "former" | "current";
+  diabetes: "no" | "yes" | "not_sure";
+};
+
+type ResultResponse = {
+  session_id: string;
+  status: string;
+  scores: {
+    ascvd_risk: number;
+    framingham_risk: number;
+    heart_age: number;
+    category: string;
+  };
+  risk_factors: Array<{
+    label: string;
+    value: string;
+    severity: string;
+    explanation: string;
+  }>;
+  ai_report: {
+    summary: string;
+    disclaimer: string;
+    citations: Array<{
+      title: string;
+      source_id: string;
+      author: string;
+    }>;
+  };
+};
+
+const initialAnswers: AssessmentAnswers = {
+  age: 52,
+  sex: "female",
+  systolic_bp: 138,
+  diastolic_bp: 88,
+  total_cholesterol: 214,
+  hdl_cholesterol: 44,
+  ldl_cholesterol: 148,
+  on_bp_medication: false,
+  smoking_status: "never",
+  diabetes: "no",
+};
+
 function App() {
+  const [answers, setAnswers] = useState<AssessmentAnswers>(initialAnswers);
+  const [result, setResult] = useState<ResultResponse | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const categoryLabel = useMemo(() => {
+    if (!result) return null;
+    return result.scores.category.replace(/^\w/, (char) => char.toUpperCase());
+  }, [result]);
+
+  async function submitAssessment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const sessionResponse = await fetch(`${API_BASE}/assessment/sessions`, {
+        method: "POST",
+      });
+      if (!sessionResponse.ok) throw new Error("Could not start assessment.");
+      const session = (await sessionResponse.json()) as { session_id: string };
+
+      const answersResponse = await fetch(
+        `${API_BASE}/assessment/sessions/${session.session_id}/answers`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(answers),
+        },
+      );
+      if (!answersResponse.ok) throw new Error("Could not save assessment answers.");
+
+      const resultResponse = await fetch(
+        `${API_BASE}/assessment/sessions/${session.session_id}/complete`,
+        { method: "POST" },
+      );
+      if (!resultResponse.ok) throw new Error("Could not calculate results.");
+      setResult((await resultResponse.json()) as ResultResponse);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function updateAnswer<Key extends keyof AssessmentAnswers>(
+    key: Key,
+    value: AssessmentAnswers[Key],
+  ) {
+    setAnswers((current) => ({ ...current, [key]: value }));
+  }
+
   return (
     <main className="app-shell">
-      <section className="intro">
-        <div className="mark" aria-hidden="true">
-          <ShieldCheck size={28} strokeWidth={2.2} />
+      <section className="hero">
+        <div className="brand-mark" aria-hidden="true">
+          <HeartPulse size={30} strokeWidth={2.2} />
         </div>
-        <p className="eyebrow">Local prototype</p>
-        <h1>HeartHealth AI</h1>
-        <p className="lede">
-          A secure-by-default local scaffold for the assessment, results,
-          content, and AI coach workflows.
-        </p>
-        <div className="status-grid" aria-label="Prototype status">
-          <div>
-            <span>Frontend</span>
-            <strong>React + Vite</strong>
-          </div>
-          <div>
-            <span>Backend</span>
-            <strong>FastAPI</strong>
-          </div>
-          <div>
-            <span>Data</span>
-            <strong>SQLite planned</strong>
-          </div>
+        <div>
+          <p className="eyebrow">HeartHealth AI</p>
+          <h1>Understand your heart health numbers in plain English.</h1>
+          <p className="lede">
+            Complete a quick demo assessment and see how clinical-style inputs can become
+            clear risk signals, education, and doctor-ready talking points.
+          </p>
         </div>
-        <p className="disclaimer">
-          Educational prototype only. Do not enter real patient or personal
-          health data.
-        </p>
+      </section>
+
+      <section className="workspace" aria-label="Heart health assessment">
+        <form className="assessment-panel" onSubmit={submitAssessment}>
+          <div className="panel-heading">
+            <Activity size={22} aria-hidden="true" />
+            <div>
+              <h2>Risk Assessment</h2>
+              <p>Use synthetic demo values only.</p>
+            </div>
+          </div>
+
+          <div className="field-grid">
+            <NumberField label="Age" value={answers.age} min={20} max={100} onChange={(value) => updateAnswer("age", value)} />
+            <SelectField label="Sex" value={answers.sex} options={[["female", "Female"], ["male", "Male"]]} onChange={(value) => updateAnswer("sex", value as AssessmentAnswers["sex"])} />
+            <NumberField label="Systolic BP" value={answers.systolic_bp} min={80} max={240} unit="mmHg" onChange={(value) => updateAnswer("systolic_bp", value)} />
+            <NumberField label="Diastolic BP" value={answers.diastolic_bp} min={40} max={140} unit="mmHg" onChange={(value) => updateAnswer("diastolic_bp", value)} />
+            <NumberField label="Total cholesterol" value={answers.total_cholesterol} min={100} max={400} unit="mg/dL" onChange={(value) => updateAnswer("total_cholesterol", value)} />
+            <NumberField label="HDL cholesterol" value={answers.hdl_cholesterol} min={20} max={120} unit="mg/dL" onChange={(value) => updateAnswer("hdl_cholesterol", value)} />
+            <NumberField label="LDL cholesterol" value={answers.ldl_cholesterol} min={40} max={300} unit="mg/dL" onChange={(value) => updateAnswer("ldl_cholesterol", value)} />
+            <SelectField label="Smoking status" value={answers.smoking_status} options={[["never", "Never"], ["former", "Former"], ["current", "Current"]]} onChange={(value) => updateAnswer("smoking_status", value as AssessmentAnswers["smoking_status"])} />
+            <SelectField label="Diabetes" value={answers.diabetes} options={[["no", "No"], ["yes", "Yes"], ["not_sure", "Not sure"]]} onChange={(value) => updateAnswer("diabetes", value as AssessmentAnswers["diabetes"])} />
+          </div>
+
+          <label className="checkbox-field">
+            <input
+              type="checkbox"
+              checked={answers.on_bp_medication}
+              onChange={(event) => updateAnswer("on_bp_medication", event.target.checked)}
+            />
+            Currently taking blood pressure medication
+          </label>
+
+          {error ? <p className="error">{error}</p> : null}
+
+          <button className="primary-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Calculating..." : "Calculate Demo Results"}
+            <ArrowRight size={18} aria-hidden="true" />
+          </button>
+        </form>
+
+        <section className="results-panel" aria-live="polite">
+          {result ? (
+            <>
+              <div className="panel-heading">
+                <ShieldCheck size={22} aria-hidden="true" />
+                <div>
+                  <h2>Results Dashboard</h2>
+                  <p>{categoryLabel} risk category</p>
+                </div>
+              </div>
+              <div className="score-grid">
+                <ScoreCard label="10-year ASCVD risk" value={`${result.scores.ascvd_risk}%`} tone={result.scores.category} />
+                <ScoreCard label="Framingham-style risk" value={`${result.scores.framingham_risk}%`} tone="intermediate" />
+                <ScoreCard label="Heart age" value={`${result.scores.heart_age}`} helper="years" tone="borderline" />
+              </div>
+              <div className="risk-list">
+                <h3>Your Risk Factors</h3>
+                {result.risk_factors.map((factor) => (
+                  <article key={factor.label}>
+                    <div>
+                      <strong>{factor.label}</strong>
+                      <span>{factor.value}</span>
+                    </div>
+                    <p>{factor.explanation}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="ai-summary">
+                <h3>AI Summary</h3>
+                <p>{result.ai_report.summary}</p>
+                <div className="citations">
+                  {result.ai_report.citations.map((citation) => (
+                    <span key={citation.source_id}>{citation.title}</span>
+                  ))}
+                </div>
+                <p className="disclaimer">{result.ai_report.disclaimer}</p>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">
+              <ShieldCheck size={34} aria-hidden="true" />
+              <h2>Your results will appear here</h2>
+              <p>
+                The backend will calculate risk signals, save a synthetic assessment,
+                and return a grounded educational summary.
+              </p>
+            </div>
+          )}
+        </section>
       </section>
     </main>
+  );
+}
+
+function NumberField(props: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit?: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="field">
+      <span>{props.label}</span>
+      <div className="input-with-unit">
+        <input
+          type="number"
+          min={props.min}
+          max={props.max}
+          value={props.value}
+          onChange={(event) => props.onChange(Number(event.target.value))}
+        />
+        {props.unit ? <small>{props.unit}</small> : null}
+      </div>
+    </label>
+  );
+}
+
+function SelectField(props: {
+  label: string;
+  value: string;
+  options: Array<[string, string]>;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="field">
+      <span>{props.label}</span>
+      <select value={props.value} onChange={(event) => props.onChange(event.target.value)}>
+        {props.options.map(([value, label]) => (
+          <option value={value} key={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ScoreCard(props: { label: string; value: string; helper?: string; tone: string }) {
+  return (
+    <article className={`score-card tone-${props.tone}`}>
+      <span>{props.label}</span>
+      <strong>{props.value}</strong>
+      {props.helper ? <small>{props.helper}</small> : null}
+    </article>
   );
 }
 

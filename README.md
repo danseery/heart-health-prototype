@@ -1,6 +1,6 @@
-# HeartHealth AI Prototype
+# HeartHealth AI
 
-HeartHealth AI is a prototype for a cardiologist-reviewed heart health platform that helps people understand their cardiac risk scores, learn what their numbers mean, and find trustworthy next steps in plain English.
+HeartHealth AI is a cardiologist-reviewed heart health platform concept that helps people understand their cardiac risk scores, learn what their numbers mean, and find trustworthy next steps in plain English.
 
 The concept centers on a free heart health risk assessment that uses established clinical calculators, then converts the results into an accessible AI-generated educational report grounded in content reviewed by Dr. Brian Chen, DO.
 
@@ -14,7 +14,7 @@ The concept centers on a free heart health risk assessment that uses established
 - Offer a RAG-powered AI health coach that answers subscriber questions using curated source material and cites the underlying content.
 - Support a simple monetization model with a free tier, a premium monthly plan, and a one-time detailed report.
 
-## Prototype Scope
+## Product Scope
 
 The initial mockups cover six core experiences:
 
@@ -35,9 +35,9 @@ The initial mockups cover six core experiences:
 
 ## Status
 
-This repository is starting as a local-first prototype planning space for the HeartHealth AI concept and website mockups.
+This repository is starting as a local-first product workspace for the HeartHealth AI concept and website mockups.
 
-## Local Prototype
+## Application Direction
 
 The implementation is intentionally local-only until Azure infrastructure work is explicitly approved.
 

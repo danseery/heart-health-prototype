@@ -1,6 +1,6 @@
 # Backend
 
-FastAPI backend for the local HeartHealth AI prototype.
+FastAPI backend for HeartHealth AI local development.
 
 ## Local Setup
 
