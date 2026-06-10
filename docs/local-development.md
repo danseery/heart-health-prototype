@@ -32,3 +32,10 @@ Open `http://127.0.0.1:5173`.
 - Keep SQLite databases under `backend/local_data/` or another ignored local path.
 - Keep environment overrides in ignored `.env` files.
 - Do not export, screenshot, or commit real health information.
+
+## Change Hygiene
+
+- Every behavior change should include a focused test when practical.
+- If a test is not practical for a small UI or workflow change, update an MD file to capture the decision, tradeoff, or user-facing behavior.
+- Keep commits on named feature branches until the slice is tested and approved for merge into `main`.
+- Do not push or create Azure infrastructure unless explicitly approved.
