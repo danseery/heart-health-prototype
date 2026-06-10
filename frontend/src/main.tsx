@@ -379,6 +379,7 @@ function NumberField(props: {
           max={props.max}
           value={props.value}
           onChange={(event) => props.onChange(Number(event.target.value))}
+          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value) ?? props.min)}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
@@ -410,6 +411,7 @@ function OptionalNumberField(props: {
             const value = event.target.value;
             props.onChange(value === "" ? null : Number(value));
           }}
+          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value))}
         />
         {props.unit ? <small>{props.unit}</small> : null}
       </div>
@@ -490,6 +492,13 @@ function heartAgeHelper(heartAge: number, actualAge: number) {
   const delta = heartAge - actualAge;
   if (delta <= 0) return "at or below age";
   return `+${delta} years`;
+}
+
+function normalizeNumberInput(value: string) {
+  const trimmed = value.trim();
+  if (trimmed === "") return null;
+  const normalized = Number(trimmed);
+  return Number.isFinite(normalized) ? normalized : null;
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
