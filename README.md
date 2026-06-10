@@ -35,4 +35,16 @@ The initial mockups cover six core experiences:
 
 ## Status
 
-This repository is starting as a prototype planning space for the HeartHealth AI concept and website mockups.
+This repository is starting as a local-first prototype planning space for the HeartHealth AI concept and website mockups.
+
+## Local Prototype
+
+The implementation is intentionally local-only until Azure infrastructure work is explicitly approved.
+
+- Frontend: React + TypeScript + Vite
+- Backend: Python + FastAPI
+- Local data: SQLite with synthetic seed data
+- AI: pluggable provider interface with a dummy local provider first
+- Security: no real patient data, no committed secrets, no Azure resources, no production pushes
+
+See [local development](docs/local-development.md) and [security baseline](docs/security-baseline.md).
