@@ -33,11 +33,13 @@ export function NumberField(props: {
       <span>{props.label}</span>
       <div className="input-with-unit">
         <input
-          type="number"
-          min={props.min}
-          max={props.max}
+          type="text"
+          inputMode="decimal"
           value={props.value}
-          onChange={(event) => props.onChange(Number(event.target.value))}
+          onChange={(event) => {
+            const normalized = normalizeNumberInput(event.target.value);
+            if (normalized !== null) props.onChange(normalized);
+          }}
           onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value) ?? props.min)}
         />
         {props.unit ? <small>{props.unit}</small> : null}
@@ -60,15 +62,13 @@ export function OptionalNumberField(props: {
       <span>{props.label}</span>
       <div className="input-with-unit">
         <input
-          type="number"
-          min={props.min}
-          max={props.max}
-          step={props.step}
+          type="text"
+          inputMode="decimal"
           value={props.value ?? ""}
           placeholder="Optional"
           onChange={(event) => {
-            const value = event.target.value;
-            props.onChange(value === "" ? null : Number(value));
+            const normalized = normalizeNumberInput(event.target.value);
+            props.onChange(event.target.value === "" ? null : normalized);
           }}
           onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value))}
         />
