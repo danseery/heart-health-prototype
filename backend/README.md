@@ -4,20 +4,20 @@ FastAPI backend for HeartHealth AI local development.
 
 ## Local Setup
 
-```powershell
-cd C:\Users\danie\OneDrive\Documents\Hearty\backend
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-Copy-Item ..\.env.example .env
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```bash
+python -m venv backend/.venv
+```
+
+Start the full app from the repo root:
+
+```bash
+python scripts/dev.py
 ```
 
 Health check:
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/health
+```bash
+curl http://127.0.0.1:8000/api/health
 ```
 
 ## Security Notes

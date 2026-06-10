@@ -121,6 +121,7 @@ class RiskResult(Base):
     heart_age: Mapped[int] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(String, nullable=False)
     risk_factors: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
+    protective_signals: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
     calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     data_classification: Mapped[str] = mapped_column(
         String,

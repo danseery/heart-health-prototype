@@ -1,0 +1,97 @@
+:root {
+  --text-primary: #272423;
+  --text-muted: #5f5952;
+  --text-subtle: #5c524b;
+  --bg: #f5f3f0;
+  --surface: #fbfbfa;
+  --surface-border: #ebd4d3;
+  --surface-shadow: rgb(122 58 58 / 10%);
+  --surface-soft: #f0eeeb;
+  --surface-soft-border: #e3dbd5;
+  --summary-surface: #f2f0ec;
+  --summary-border: #dfd8d1;
+  --brand: #a83f3d;
+  --brand-strong: #8f302f;
+  --brand-soft: #cf7772;
+  --brand-focus: #bd666240;
+  --link-accent: #7b5c2e;
+  --link-accent-strong: #62481f;
+  --link-surface: #f7efe2;
+  --link-border: #dbc7a4;
+  --info: #5a4d43;
+  --success: #5b9b63;
+  --low-risk: #c7a54a;
+  --warning: #d4833f;
+  --danger: #d12f2f;
+  --error-bg: #faece9;
+  --error-border: #f0c5bd;
+  --error-text: #8a2d26;
+
+  color: var(--text-primary);
+  background: var(--bg);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="light"] {
+  --bg: #f5f3f0;
+  --surface: #fbfbfa;
+  --surface-border: #ebd4d3;
+  --surface-shadow: rgb(122 58 58 / 10%);
+  --surface-soft: #f0eeeb;
+  --surface-soft-border: #e3dbd5;
+  --summary-surface: #f2f0ec;
+  --summary-border: #dfd8d1;
+  --text-primary: #332625;
+  --text-muted: #6c5755;
+  --text-subtle: #6a5553;
+  --brand: #a83f3d;
+  --brand-strong: #8f302f;
+  --brand-soft: #cf7772;
+  --brand-focus: #bd666240;
+  --link-accent: #9f5f48;
+  --link-accent-strong: #824534;
+  --link-surface: #f4e3dd;
+  --link-border: #e2b59d;
+  --success: #5b9b63;
+  --low-risk: #c7a54a;
+  --warning: #d4833f;
+  --danger: #d12f2f;
+  --error-bg: #f5ece8;
+  --error-border: #ecbcae;
+  --error-text: #8c352d;
+  --info: #5c4c41;
+}
+
+:root[data-theme="dark"] {
+  --bg: #120f0f;
+  --surface: #241a1a;
+  --surface-border: #4a3837;
+  --surface-shadow: rgb(0 0 0 / 30%);
+  --surface-soft: #2b1f1f;
+  --surface-soft-border: #51403f;
+  --summary-surface: #2a2220;
+  --summary-border: #52413f;
+  --text-primary: #f9efed;
+  --text-muted: #ddc7c4;
+  --text-subtle: #d8bfbc;
+  --brand: #ef5b58;
+  --brand-strong: #ff7672;
+  --brand-soft: #d55e5b;
+  --brand-focus: #ef777344;
+  --link-accent: #f7c39f;
+  --link-accent-strong: #ffd6b5;
+  --link-surface: #3c3024;
+  --link-border: #6f5b3f;
+  --success: #79c889;
+  --low-risk: #e0cd68;
+  --warning: #eea056;
+  --danger: #ff3f3f;
+  --error-bg: #3a2827;
+  --error-border: #7a4745;
+  --error-text: #ffd4d0;
+  --info: #e2c8c5;
+}

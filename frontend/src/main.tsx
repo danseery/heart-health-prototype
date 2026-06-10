@@ -1,75 +1,28 @@
 import React, { FormEvent, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { Activity, ArrowRight, HeartPulse, ShieldCheck } from "lucide-react";
+import { Activity, HeartPulse, ShieldCheck } from "lucide-react";
+
+import {
+  NumberField,
+  OptionalCheckbox,
+  OptionalNumberField,
+  ScoreCard,
+  SelectField,
+  SignalSection,
+  SubmitButton,
+  ThemeToggle,
+} from "./components";
+import {
+  ascvdTone,
+  framinghamTone,
+  heartAgeHelper,
+  heartAgeTone,
+} from "./riskDisplay";
 import "./styles.css";
+import { applyTheme, type ThemeName } from "./theme";
+import type { AssessmentAnswers, ContentSummary, ResultResponse } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
-
-type AssessmentAnswers = {
-  age: number;
-  sex: "female" | "male";
-  systolic_bp: number;
-  diastolic_bp: number;
-  total_cholesterol: number;
-  hdl_cholesterol: number;
-  ldl_cholesterol: number;
-  on_bp_medication: boolean;
-  smoking_status: "never" | "former" | "current";
-  diabetes: "no" | "yes" | "not_sure";
-  family_history_premature_ascvd: boolean | null;
-  chronic_kidney_disease: boolean | null;
-  metabolic_syndrome: boolean | null;
-  inflammatory_condition: boolean | null;
-  premature_menopause: boolean | null;
-  preeclampsia_history: boolean | null;
-  south_asian_ancestry: boolean | null;
-  cac_score: number | null;
-  lpa_mg_dl: number | null;
-  apob_mg_dl: number | null;
-  hs_crp_mg_l: number | null;
-  a1c_percent: number | null;
-  egfr: number | null;
-  triglycerides: number | null;
-  ankle_brachial_index: number | null;
-  carotid_plaque: boolean | null;
-  left_ventricular_hypertrophy: boolean | null;
-  atrial_fibrillation_history: boolean | null;
-};
-
-type ResultResponse = {
-  session_id: string;
-  status: string;
-  scores: {
-    ascvd_risk: number;
-    framingham_risk: number;
-    heart_age: number;
-    category: string;
-  };
-  risk_factors: Array<{
-    label: string;
-    value: string;
-    severity: string;
-    explanation: string;
-  }>;
-  ai_report: {
-    summary: string;
-    disclaimer: string;
-    citations: Array<{
-      title: string;
-      source_id: string;
-      author: string;
-    }>;
-  };
-};
-
-type ContentSummary = {
-  content_id: string;
-  title: string;
-  topic: string;
-  author: string;
-  summary: string;
-  cached: boolean;
-};
 
 const initialAnswers: AssessmentAnswers = {
   age: 52,
@@ -82,6 +35,7 @@ const initialAnswers: AssessmentAnswers = {
   on_bp_medication: false,
   smoking_status: "never",
   diabetes: "no",
+  established_ascvd: null,
   family_history_premature_ascvd: null,
   chronic_kidney_disease: null,
   metabolic_syndrome: null,
@@ -109,6 +63,11 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingContentId, setLoadingContentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemeName>("light");
+
+  React.useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   const categoryLabel = useMemo(() => {
     if (!result) return null;
@@ -172,6 +131,13 @@ function App() {
 
   return (
     <main className="app-shell">
+      <div className="theme-switch">
+        <ThemeToggle
+          checked={theme === "dark"}
+          onChange={(checked) => setTheme(checked ? "dark" : "light")}
+        />
+      </div>
+
       <section className="hero">
         <div className="brand-mark" aria-hidden="true">
           <HeartPulse size={30} strokeWidth={2.2} />
@@ -198,15 +164,86 @@ function App() {
           </div>
 
           <div className="field-grid">
-            <NumberField label="Age" value={answers.age} min={18} max={100} onChange={(value) => updateAnswer("age", value)} />
-            <SelectField label="Sex" value={answers.sex} options={[["female", "Female"], ["male", "Male"]]} onChange={(value) => updateAnswer("sex", value as AssessmentAnswers["sex"])} />
-            <NumberField label="Systolic BP" value={answers.systolic_bp} min={70} max={260} unit="mmHg" onChange={(value) => updateAnswer("systolic_bp", value)} />
-            <NumberField label="Diastolic BP" value={answers.diastolic_bp} min={30} max={160} unit="mmHg" onChange={(value) => updateAnswer("diastolic_bp", value)} />
-            <NumberField label="Total cholesterol" value={answers.total_cholesterol} min={50} max={500} unit="mg/dL" onChange={(value) => updateAnswer("total_cholesterol", value)} />
-            <NumberField label="HDL cholesterol" value={answers.hdl_cholesterol} min={10} max={150} unit="mg/dL" onChange={(value) => updateAnswer("hdl_cholesterol", value)} />
-            <NumberField label="LDL cholesterol" value={answers.ldl_cholesterol} min={0} max={400} unit="mg/dL" onChange={(value) => updateAnswer("ldl_cholesterol", value)} />
-            <SelectField label="Smoking status" value={answers.smoking_status} options={[["never", "Never"], ["former", "Former"], ["current", "Current"]]} onChange={(value) => updateAnswer("smoking_status", value as AssessmentAnswers["smoking_status"])} />
-            <SelectField label="Diabetes" value={answers.diabetes} options={[["no", "No"], ["yes", "Yes"], ["not_sure", "Not sure"]]} onChange={(value) => updateAnswer("diabetes", value as AssessmentAnswers["diabetes"])} />
+            <NumberField
+              label="Age"
+              value={answers.age}
+              min={18}
+              max={100}
+              onChange={(value) => updateAnswer("age", value)}
+            />
+            <SelectField
+              label="Sex"
+              value={answers.sex}
+              options={[
+                ["female", "Female"],
+                ["male", "Male"],
+              ]}
+              onChange={(value) => updateAnswer("sex", value as AssessmentAnswers["sex"])}
+            />
+            <NumberField
+              label="Systolic BP"
+              value={answers.systolic_bp}
+              min={70}
+              max={260}
+              unit="mmHg"
+              onChange={(value) => updateAnswer("systolic_bp", value)}
+            />
+            <NumberField
+              label="Diastolic BP"
+              value={answers.diastolic_bp}
+              min={30}
+              max={160}
+              unit="mmHg"
+              onChange={(value) => updateAnswer("diastolic_bp", value)}
+            />
+            <NumberField
+              label="Total cholesterol"
+              value={answers.total_cholesterol}
+              min={50}
+              max={500}
+              unit="mg/dL"
+              onChange={(value) => updateAnswer("total_cholesterol", value)}
+            />
+            <NumberField
+              label="HDL cholesterol"
+              value={answers.hdl_cholesterol}
+              min={10}
+              max={150}
+              unit="mg/dL"
+              onChange={(value) => updateAnswer("hdl_cholesterol", value)}
+            />
+            <NumberField
+              label="LDL cholesterol"
+              value={answers.ldl_cholesterol}
+              min={0}
+              max={400}
+              unit="mg/dL"
+              onChange={(value) => updateAnswer("ldl_cholesterol", value)}
+            />
+            <SelectField
+              label="Smoking status"
+              value={answers.smoking_status}
+              options={[
+                ["never", "Never"],
+                ["former", "Former"],
+                ["current", "Current"],
+              ]}
+              onChange={(value) =>
+                updateAnswer("smoking_status", value as AssessmentAnswers["smoking_status"])
+              }
+            />
+            <SelectField
+              label="Diabetes"
+              value={answers.diabetes}
+              options={[
+                ["no", "No"],
+                ["yes", "Yes"],
+                ["not_sure", "Not sure"],
+              ]}
+              onChange={(value) =>
+                updateAnswer("diabetes", value as AssessmentAnswers["diabetes"])
+              }
+            />
           </div>
 
           <label className="checkbox-field">
@@ -231,47 +268,148 @@ function App() {
               <details className="advanced-group">
                 <summary>Clinical history</summary>
                 <div className="checkbox-grid">
-                  <OptionalCheckbox label="Family history of premature ASCVD" checked={answers.family_history_premature_ascvd} onChange={(value) => updateAnswer("family_history_premature_ascvd", value)} />
-                  <OptionalCheckbox label="Chronic kidney disease" checked={answers.chronic_kidney_disease} onChange={(value) => updateAnswer("chronic_kidney_disease", value)} />
-                  <OptionalCheckbox label="Metabolic syndrome" checked={answers.metabolic_syndrome} onChange={(value) => updateAnswer("metabolic_syndrome", value)} />
-                  <OptionalCheckbox label="Chronic inflammatory condition" checked={answers.inflammatory_condition} onChange={(value) => updateAnswer("inflammatory_condition", value)} />
-                  <OptionalCheckbox label="Premature menopause" checked={answers.premature_menopause} onChange={(value) => updateAnswer("premature_menopause", value)} />
-                  <OptionalCheckbox label="History of preeclampsia" checked={answers.preeclampsia_history} onChange={(value) => updateAnswer("preeclampsia_history", value)} />
-                  <OptionalCheckbox label="South Asian ancestry" checked={answers.south_asian_ancestry} onChange={(value) => updateAnswer("south_asian_ancestry", value)} />
+                  <OptionalCheckbox
+                    label="Established ASCVD or prior cardiovascular event"
+                    checked={answers.established_ascvd}
+                    onChange={(value) => updateAnswer("established_ascvd", value)}
+                  />
+                  <OptionalCheckbox
+                    label="Family history of premature ASCVD"
+                    checked={answers.family_history_premature_ascvd}
+                    onChange={(value) => updateAnswer("family_history_premature_ascvd", value)}
+                  />
+                  <OptionalCheckbox
+                    label="Chronic kidney disease"
+                    checked={answers.chronic_kidney_disease}
+                    onChange={(value) => updateAnswer("chronic_kidney_disease", value)}
+                  />
+                  <OptionalCheckbox
+                    label="Metabolic syndrome"
+                    checked={answers.metabolic_syndrome}
+                    onChange={(value) => updateAnswer("metabolic_syndrome", value)}
+                  />
+                  <OptionalCheckbox
+                    label="Chronic inflammatory condition"
+                    checked={answers.inflammatory_condition}
+                    onChange={(value) => updateAnswer("inflammatory_condition", value)}
+                  />
+                  <OptionalCheckbox
+                    label="Premature menopause"
+                    checked={answers.premature_menopause}
+                    onChange={(value) => updateAnswer("premature_menopause", value)}
+                  />
+                  <OptionalCheckbox
+                    label="History of preeclampsia"
+                    checked={answers.preeclampsia_history}
+                    onChange={(value) => updateAnswer("preeclampsia_history", value)}
+                  />
+                  <OptionalCheckbox
+                    label="South Asian ancestry"
+                    checked={answers.south_asian_ancestry}
+                    onChange={(value) => updateAnswer("south_asian_ancestry", value)}
+                  />
                 </div>
               </details>
+
               <details className="advanced-group">
                 <summary>Advanced labs</summary>
                 <div className="field-grid">
-                  <OptionalNumberField label="Lp(a)" value={answers.lpa_mg_dl} min={0} max={500} step="0.1" unit="mg/dL" onChange={(value) => updateAnswer("lpa_mg_dl", value)} />
-                  <OptionalNumberField label="ApoB" value={answers.apob_mg_dl} min={20} max={300} unit="mg/dL" onChange={(value) => updateAnswer("apob_mg_dl", value)} />
-                  <OptionalNumberField label="hs-CRP" value={answers.hs_crp_mg_l} min={0} max={100} step="0.1" unit="mg/L" onChange={(value) => updateAnswer("hs_crp_mg_l", value)} />
-                  <OptionalNumberField label="A1c" value={answers.a1c_percent} min={3} max={18} step="0.1" unit="%" onChange={(value) => updateAnswer("a1c_percent", value)} />
-                  <OptionalNumberField label="eGFR (mL/min/1.73 m2)" value={answers.egfr} min={0} max={150} onChange={(value) => updateAnswer("egfr", value)} />
-                  <OptionalNumberField label="Triglycerides" value={answers.triglycerides} min={20} max={3000} unit="mg/dL" onChange={(value) => updateAnswer("triglycerides", value)} />
+                  <OptionalNumberField
+                    label="Lp(a)"
+                    value={answers.lpa_mg_dl}
+                    min={0}
+                    max={500}
+                    step="0.1"
+                    unit="mg/dL"
+                    onChange={(value) => updateAnswer("lpa_mg_dl", value)}
+                  />
+                  <OptionalNumberField
+                    label="ApoB"
+                    value={answers.apob_mg_dl}
+                    min={20}
+                    max={300}
+                    unit="mg/dL"
+                    onChange={(value) => updateAnswer("apob_mg_dl", value)}
+                  />
+                  <OptionalNumberField
+                    label="hs-CRP"
+                    value={answers.hs_crp_mg_l}
+                    min={0}
+                    max={100}
+                    step="0.1"
+                    unit="mg/L"
+                    onChange={(value) => updateAnswer("hs_crp_mg_l", value)}
+                  />
+                  <OptionalNumberField
+                    label="A1c"
+                    value={answers.a1c_percent}
+                    min={3}
+                    max={18}
+                    step="0.1"
+                    unit="%"
+                    onChange={(value) => updateAnswer("a1c_percent", value)}
+                  />
+                  <OptionalNumberField
+                    label="eGFR (mL/min/1.73 m2)"
+                    value={answers.egfr}
+                    min={0}
+                    max={150}
+                    onChange={(value) => updateAnswer("egfr", value)}
+                  />
+                  <OptionalNumberField
+                    label="Triglycerides"
+                    value={answers.triglycerides}
+                    min={20}
+                    max={3000}
+                    unit="mg/dL"
+                    onChange={(value) => updateAnswer("triglycerides", value)}
+                  />
                 </div>
               </details>
+
               <details className="advanced-group">
                 <summary>Cardiac tests</summary>
                 <div className="field-grid">
-                  <OptionalNumberField label="CAC score" value={answers.cac_score} min={0} max={5000} unit="Agatston" onChange={(value) => updateAnswer("cac_score", value)} />
-                  <OptionalNumberField label="Ankle-brachial index" value={answers.ankle_brachial_index} min={0} max={2.5} step="0.01" onChange={(value) => updateAnswer("ankle_brachial_index", value)} />
+                  <OptionalNumberField
+                    label="CAC score"
+                    value={answers.cac_score}
+                    min={0}
+                    max={5000}
+                    unit="Agatston"
+                    onChange={(value) => updateAnswer("cac_score", value)}
+                  />
+                  <OptionalNumberField
+                    label="Ankle-brachial index"
+                    value={answers.ankle_brachial_index}
+                    min={0}
+                    max={2.5}
+                    step="0.01"
+                    onChange={(value) => updateAnswer("ankle_brachial_index", value)}
+                  />
                 </div>
                 <div className="checkbox-grid compact">
-                  <OptionalCheckbox label="Carotid plaque documented" checked={answers.carotid_plaque} onChange={(value) => updateAnswer("carotid_plaque", value)} />
-                  <OptionalCheckbox label="LVH on ECG/echo" checked={answers.left_ventricular_hypertrophy} onChange={(value) => updateAnswer("left_ventricular_hypertrophy", value)} />
-                  <OptionalCheckbox label="History of atrial fibrillation" checked={answers.atrial_fibrillation_history} onChange={(value) => updateAnswer("atrial_fibrillation_history", value)} />
+                  <OptionalCheckbox
+                    label="Carotid plaque documented"
+                    checked={answers.carotid_plaque}
+                    onChange={(value) => updateAnswer("carotid_plaque", value)}
+                  />
+                  <OptionalCheckbox
+                    label="LVH on ECG/echo"
+                    checked={answers.left_ventricular_hypertrophy}
+                    onChange={(value) => updateAnswer("left_ventricular_hypertrophy", value)}
+                  />
+                  <OptionalCheckbox
+                    label="History of atrial fibrillation"
+                    checked={answers.atrial_fibrillation_history}
+                    onChange={(value) => updateAnswer("atrial_fibrillation_history", value)}
+                  />
                 </div>
               </details>
             </div>
           </details>
 
           {error ? <p className="error">{error}</p> : null}
-
-          <button className="primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Calculating..." : "Calculate Results"}
-            <ArrowRight size={18} aria-hidden="true" />
-          </button>
+          <SubmitButton isSubmitting={isSubmitting} />
         </form>
 
         <section className="results-panel" aria-live="polite">
@@ -284,6 +422,7 @@ function App() {
                   <p>{categoryLabel} risk category</p>
                 </div>
               </div>
+
               <div className="score-grid">
                 <ScoreCard
                   label="10-year ASCVD risk"
@@ -302,18 +441,19 @@ function App() {
                   tone={heartAgeTone(result.scores.heart_age, answers.age)}
                 />
               </div>
-              <div className="risk-list">
-                <h3>Your Risk Factors</h3>
-                {result.risk_factors.map((factor) => (
-                  <article key={factor.label}>
-                    <div>
-                      <strong>{factor.label}</strong>
-                      <span>{factor.value}</span>
-                    </div>
-                    <p>{factor.explanation}</p>
-                  </article>
-                ))}
-              </div>
+
+              <SignalSection
+                title="Protective Signals"
+                items={result.protective_signals ?? []}
+                variant="protective"
+              />
+
+              <SignalSection
+                title="Your Risk Factors"
+                items={result.risk_factors ?? []}
+                variant="risk"
+              />
+
               <div className="ai-summary">
                 <h3>AI Summary</h3>
                 <p>{result.ai_report.summary}</p>
@@ -330,6 +470,7 @@ function App() {
                 </div>
                 <p className="disclaimer">{result.ai_report.disclaimer}</p>
               </div>
+
               {contentSummary ? (
                 <aside className="content-summary">
                   <div>
@@ -358,146 +499,6 @@ function App() {
       </section>
     </main>
   );
-}
-
-function NumberField(props: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  unit?: string;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="field">
-      <span>{props.label}</span>
-      <div className="input-with-unit">
-        <input
-          type="number"
-          min={props.min}
-          max={props.max}
-          value={props.value}
-          onChange={(event) => props.onChange(Number(event.target.value))}
-          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value) ?? props.min)}
-        />
-        {props.unit ? <small>{props.unit}</small> : null}
-      </div>
-    </label>
-  );
-}
-
-function OptionalNumberField(props: {
-  label: string;
-  value: number | null;
-  min: number;
-  max: number;
-  step?: string;
-  unit?: string;
-  onChange: (value: number | null) => void;
-}) {
-  return (
-    <label className="field">
-      <span>{props.label}</span>
-      <div className="input-with-unit">
-        <input
-          type="number"
-          min={props.min}
-          max={props.max}
-          step={props.step}
-          value={props.value ?? ""}
-          placeholder="Optional"
-          onChange={(event) => {
-            const value = event.target.value;
-            props.onChange(value === "" ? null : Number(value));
-          }}
-          onBlur={(event) => props.onChange(normalizeNumberInput(event.target.value))}
-        />
-        {props.unit ? <small>{props.unit}</small> : null}
-      </div>
-    </label>
-  );
-}
-
-function OptionalCheckbox(props: {
-  label: string;
-  checked: boolean | null;
-  onChange: (value: boolean | null) => void;
-}) {
-  return (
-    <label className="mini-checkbox">
-      <input
-        type="checkbox"
-        checked={props.checked === true}
-        onChange={(event) => props.onChange(event.target.checked ? true : null)}
-      />
-      {props.label}
-    </label>
-  );
-}
-
-function SelectField(props: {
-  label: string;
-  value: string;
-  options: Array<[string, string]>;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="field">
-      <span>{props.label}</span>
-      <select value={props.value} onChange={(event) => props.onChange(event.target.value)}>
-        {props.options.map(([value, label]) => (
-          <option value={value} key={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function ScoreCard(props: { label: string; value: string; helper?: string; tone: string }) {
-  return (
-    <article className={`score-card tone-${props.tone}`}>
-      <span>{props.label}</span>
-      <strong>{props.value}</strong>
-      {props.helper ? <small>{props.helper}</small> : null}
-    </article>
-  );
-}
-
-function ascvdTone(risk: number) {
-  if (risk < 5) return "green";
-  if (risk < 7.5) return "yellow";
-  if (risk < 20) return "orange";
-  return "red";
-}
-
-function framinghamTone(risk: number) {
-  if (risk < 5) return "green";
-  if (risk < 10) return "yellow";
-  if (risk < 20) return "orange";
-  return "red";
-}
-
-function heartAgeTone(heartAge: number, actualAge: number) {
-  const delta = heartAge - actualAge;
-  if (delta <= 0) return "green";
-  if (delta <= 5) return "yellow";
-  if (delta <= 10) return "orange";
-  return "red";
-}
-
-function heartAgeHelper(heartAge: number, actualAge: number) {
-  const delta = heartAge - actualAge;
-  if (delta <= 0) return "at or below age";
-  return `+${delta} years`;
-}
-
-function normalizeNumberInput(value: string) {
-  const trimmed = value.trim();
-  if (trimmed === "") return null;
-  const normalized = Number(trimmed);
-  return Number.isFinite(normalized) ? normalized : null;
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

@@ -29,14 +29,14 @@ router = APIRouter(prefix="/assessment", tags=["assessment"])
 
 
 QUESTIONS = [
-    AssessmentQuestion(key="age", label="Age", input_type="number", helper_text="Use a synthetic demo age.", min_value=20, max_value=100),
+    AssessmentQuestion(key="age", label="Age", input_type="number", helper_text="Use an adult age for the assessment.", min_value=20, max_value=100),
     AssessmentQuestion(key="sex", label="Sex", input_type="select", helper_text="Used by many risk calculators.", options=[{"label": "Female", "value": "female"}, {"label": "Male", "value": "male"}]),
     AssessmentQuestion(key="systolic_bp", label="Systolic blood pressure", input_type="number", helper_text="Top number on a blood pressure reading.", unit="mmHg", min_value=80, max_value=240),
     AssessmentQuestion(key="diastolic_bp", label="Diastolic blood pressure", input_type="number", helper_text="Bottom number on a blood pressure reading.", unit="mmHg", min_value=40, max_value=140),
     AssessmentQuestion(key="total_cholesterol", label="Total cholesterol", input_type="number", helper_text="From a recent lipid panel.", unit="mg/dL", min_value=100, max_value=400),
     AssessmentQuestion(key="hdl_cholesterol", label="HDL cholesterol", input_type="number", helper_text="Often called good cholesterol.", unit="mg/dL", min_value=20, max_value=120),
     AssessmentQuestion(key="ldl_cholesterol", label="LDL cholesterol", input_type="number", helper_text="Often called bad cholesterol.", unit="mg/dL", min_value=40, max_value=300),
-    AssessmentQuestion(key="on_bp_medication", label="Blood pressure medication", input_type="boolean", helper_text="Whether the demo user is taking blood pressure medication."),
+    AssessmentQuestion(key="on_bp_medication", label="Blood pressure medication", input_type="boolean", helper_text="Whether the person is taking blood pressure medication."),
     AssessmentQuestion(key="smoking_status", label="Smoking status", input_type="select", helper_text="Current smoking changes risk estimates.", options=[{"label": "Never", "value": "never"}, {"label": "Former", "value": "former"}, {"label": "Current", "value": "current"}]),
     AssessmentQuestion(key="diabetes", label="Diabetes", input_type="select", helper_text="Used in common cardiovascular risk equations.", options=[{"label": "No", "value": "no"}, {"label": "Yes", "value": "yes"}, {"label": "Not sure", "value": "not_sure"}]),
 ]
@@ -158,6 +158,7 @@ def _result_response(session: AssessmentSession, result: RiskResult, report: AIR
             "category": result.category,
         },
         risk_factors=result.risk_factors,
+        protective_signals=result.protective_signals,
         ai_report={
             "summary": report.summary,
             "disclaimer": report.disclaimer,

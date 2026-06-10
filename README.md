@@ -48,3 +48,11 @@ The implementation is intentionally local-only until Azure infrastructure work i
 - Security: no real patient data, no committed secrets, no Azure resources, no production pushes
 
 See [local development](docs/local-development.md) and [security baseline](docs/security-baseline.md).
+
+## Local Run
+
+After the one-time setup in [local development](docs/local-development.md), start the full app from the repo root with:
+
+```bash
+python scripts/dev.py
+```

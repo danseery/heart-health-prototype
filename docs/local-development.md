@@ -4,27 +4,56 @@ This prototype runs locally only. Do not use real patient data, do not create Az
 
 ## Backend
 
-```powershell
-cd C:\Users\danie\OneDrive\Documents\Hearty\backend
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-Copy-Item ..\.env.example .env
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```bash
+python -m venv backend/.venv
 ```
-
-Open `http://127.0.0.1:8000/api/health`.
 
 ## Frontend
 
+Windows:
+
 ```powershell
-cd C:\Users\danie\OneDrive\Documents\Hearty\frontend
-npm install
-npm run dev
+.\backend\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+Copy-Item .env.example backend\.env
+npm install --prefix frontend
 ```
 
-Open `http://127.0.0.1:5173`.
+Linux / WSL:
+
+```bash
+backend/.venv/bin/python -m pip install --upgrade pip
+backend/.venv/bin/python -m pip install -r backend/requirements.txt
+cp .env.example backend/.env
+npm install --prefix frontend
+```
+
+## Start the App
+
+Start the full app from the repo root:
+
+```bash
+python scripts/dev.py
+```
+
+Or on Linux / WSL:
+
+```bash
+./scripts/dev.sh
+```
+
+This starts:
+
+- FastAPI on `http://127.0.0.1:8000`
+- Vite on `http://127.0.0.1:5173`
+
+Health check:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+If you prefer the VS Code UI, run the `HeartHealth: Start Local App` task from the command palette.
 
 ## Local Data Rules
 
