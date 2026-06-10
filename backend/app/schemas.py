@@ -22,16 +22,34 @@ class DiabetesStatus(StrEnum):
 
 
 class AnswerPayload(BaseModel):
-    age: Annotated[int, Field(ge=20, le=100)]
+    age: Annotated[int, Field(ge=18, le=100)]
     sex: Sex
-    systolic_bp: Annotated[int, Field(ge=80, le=240)]
-    diastolic_bp: Annotated[int, Field(ge=40, le=140)]
-    total_cholesterol: Annotated[int, Field(ge=100, le=400)]
-    hdl_cholesterol: Annotated[int, Field(ge=20, le=120)]
-    ldl_cholesterol: Annotated[int, Field(ge=40, le=300)]
+    systolic_bp: Annotated[int, Field(ge=70, le=260)]
+    diastolic_bp: Annotated[int, Field(ge=30, le=160)]
+    total_cholesterol: Annotated[int, Field(ge=50, le=500)]
+    hdl_cholesterol: Annotated[int, Field(ge=10, le=150)]
+    ldl_cholesterol: Annotated[int, Field(ge=0, le=400)]
     on_bp_medication: bool
     smoking_status: SmokingStatus
     diabetes: DiabetesStatus
+    family_history_premature_ascvd: bool | None = None
+    chronic_kidney_disease: bool | None = None
+    metabolic_syndrome: bool | None = None
+    inflammatory_condition: bool | None = None
+    premature_menopause: bool | None = None
+    preeclampsia_history: bool | None = None
+    south_asian_ancestry: bool | None = None
+    cac_score: Annotated[int | None, Field(ge=0, le=5000)] = None
+    lpa_mg_dl: Annotated[float | None, Field(ge=0, le=500)] = None
+    apob_mg_dl: Annotated[float | None, Field(ge=20, le=300)] = None
+    hs_crp_mg_l: Annotated[float | None, Field(ge=0, le=100)] = None
+    a1c_percent: Annotated[float | None, Field(ge=3, le=18)] = None
+    egfr: Annotated[float | None, Field(ge=0, le=150)] = None
+    triglycerides: Annotated[int | None, Field(ge=20, le=3000)] = None
+    ankle_brachial_index: Annotated[float | None, Field(ge=0, le=2.5)] = None
+    carotid_plaque: bool | None = None
+    left_ventricular_hypertrophy: bool | None = None
+    atrial_fibrillation_history: bool | None = None
 
 
 class AssessmentQuestion(BaseModel):

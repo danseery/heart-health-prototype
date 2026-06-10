@@ -169,6 +169,18 @@ def _result_response(session: AssessmentSession, result: RiskResult, report: AIR
 def _unit_for(field: str) -> str | None:
     if field.endswith("cholesterol"):
         return "mg/dL"
+    if field in {"lpa_mg_dl", "apob_mg_dl", "triglycerides"}:
+        return "mg/dL"
+    if field == "hs_crp_mg_l":
+        return "mg/L"
+    if field == "a1c_percent":
+        return "%"
+    if field == "egfr":
+        return "mL/min/1.73 m2"
+    if field == "cac_score":
+        return "Agatston"
+    if field == "ankle_brachial_index":
+        return "ratio"
     if field.endswith("_bp"):
         return "mmHg"
     return None
