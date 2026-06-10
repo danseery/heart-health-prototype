@@ -180,8 +180,9 @@ function App() {
           <p className="eyebrow">HeartHealth AI</p>
           <h1>Understand your heart health numbers in plain English.</h1>
           <p className="lede">
-            Complete a quick demo assessment and see how clinical-style inputs can become
-            clear risk signals, education, and doctor-ready talking points.
+            Review common cardiovascular risk factors, see how they shape an overall
+            prevention profile, and turn clinical-style inputs into clear next-step
+            questions for a healthcare conversation.
           </p>
         </div>
       </section>
@@ -192,7 +193,7 @@ function App() {
             <Activity size={22} aria-hidden="true" />
             <div>
               <h2>Risk Assessment</h2>
-              <p>Use synthetic demo values only.</p>
+              <p>Enter values you want to review and interpret.</p>
             </div>
           </div>
 
@@ -268,7 +269,7 @@ function App() {
           {error ? <p className="error">{error}</p> : null}
 
           <button className="primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Calculating..." : "Calculate Demo Results"}
+            {isSubmitting ? "Calculating..." : "Calculate Results"}
             <ArrowRight size={18} aria-hidden="true" />
           </button>
         </form>
@@ -339,9 +340,7 @@ function App() {
                   </div>
                   <h3>{contentSummary.title}</h3>
                   <p>{contentSummary.summary}</p>
-                  <small>
-                    {contentSummary.author} - {contentSummary.cached ? "Cached summary" : "Summary cached"}
-                  </small>
+                  <small>{contentSummary.author}</small>
                 </aside>
               ) : null}
             </>
