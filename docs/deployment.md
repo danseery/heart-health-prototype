@@ -86,12 +86,18 @@ The workflow expects these GitHub environment variables in the `dev` environment
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
+- `AZURE_OPENAI_DEPLOYMENT`
 - `TF_STATE_RESOURCE_GROUP_NAME`
 - `TF_STATE_STORAGE_ACCOUNT_NAME`
 - `TF_STATE_CONTAINER_NAME`
 - `TF_STATE_KEY`
 
 The bootstrap script sets these for you.
+
+The workflow also expects this GitHub environment secret in `dev` before Big
+Brain calls can succeed:
+
+- `AZURE_OPENAI_API_KEY`
 
 ## Azure OpenAI
 

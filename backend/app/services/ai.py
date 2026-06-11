@@ -50,7 +50,6 @@ def generate_assessment_summary(
     if provider == "azure_openai":
         return generate_azure_assessment_summary(answers, risk, active_settings)
     if provider == "dummy":
-        logger.info("AI summary generated provider=dummy")
         return generate_dummy_assessment_summary(answers, risk)
 
     raise ValueError(f"Unsupported AI provider: {active_settings.ai_provider}")
@@ -117,13 +116,6 @@ def generate_azure_assessment_summary(
     if not summary:
         raise ValueError("Azure OpenAI summary response did not include a summary.")
 
-    logger.info(
-        "AI summary generated provider=azure_openai endpoint_type=%s request_id=%s",
-        endpoint_type,
-        response.headers.get("x-ms-request-id")
-        or response.headers.get("apim-request-id")
-        or "unavailable",
-    )
     return {
         "summary": summary,
         "disclaimer": disclaimer,

@@ -128,6 +128,7 @@ def test_azure_openai_summary_uses_structured_prompt(monkeypatch, caplog) -> Non
     assert "AI summary response received provider=azure_openai status_code=200" in caplog.text
     assert "AI summary provider selected provider=azure_openai" in caplog.text
     assert "request_id=req_test_123" in caplog.text
+    assert "AI summary generated provider=azure_openai" not in caplog.text
 
 
 def test_big_brain_foundry_endpoint_uses_models_chat_route() -> None:

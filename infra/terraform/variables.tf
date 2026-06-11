@@ -95,6 +95,13 @@ variable "azure_openai_deployment" {
   default     = ""
 }
 
+variable "azure_openai_api_key" {
+  description = "Azure OpenAI or Azure AI Foundry API key used by the backend. Prefer managed identity before production."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "azure_openai_api_version" {
   description = "Azure OpenAI API version used by the application when implemented."
   type        = string
