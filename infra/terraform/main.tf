@@ -22,6 +22,7 @@ locals {
 
   backend_url               = "https://${local.backend_app_name}.${azurerm_container_app_environment.main.default_domain}"
   frontend_url              = "https://${local.frontend_app_name}.${azurerm_container_app_environment.main.default_domain}"
+  frontend_origin_regex     = "^https://${local.frontend_app_name}(--[a-z0-9-]+)?\\.${replace(azurerm_container_app_environment.main.default_domain, ".", "\\.")}$"
   backend_api_base          = "${local.backend_url}/api"
   effective_openai_endpoint = var.create_azure_openai_resource ? azurerm_cognitive_account.openai[0].endpoint : var.azure_openai_endpoint
   common_tags = merge(var.tags, {
@@ -192,6 +193,11 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "FRONTEND_ORIGINS"
         value = local.frontend_url
+      }
+
+      env {
+        name  = "FRONTEND_ORIGIN_REGEX"
+        value = local.frontend_origin_regex
       }
 
       env {

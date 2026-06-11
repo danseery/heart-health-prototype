@@ -9,7 +9,8 @@ param(
     [string]$StateContainerName = "tfstate",
     [string]$StateKey = "heart-health-dev.tfstate",
     [string]$AppRegistrationName = "github-heart-health-dev",
-    [string]$StateStorageAccountName = ""
+    [string]$StateStorageAccountName = "",
+    [switch]$CheckPrereqs
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,45 @@ function Assert-Command {
     param([string]$Name)
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
         throw "Required command '$Name' was not found. Install it, then rerun this script."
+    }
+}
+
+function Test-Prerequisites {
+    $required = @("git", "python", "node", "npm", "az", "gh", "terraform")
+    $missing = @()
+
+    Write-Host "Bootstrap prerequisite checklist:"
+    Write-Host "  Local development:"
+    Write-Host "    - git"
+    Write-Host "    - python 3.12+"
+    Write-Host "    - node 22+"
+    Write-Host "    - npm"
+    Write-Host "  Azure dev bootstrap/deploy:"
+    Write-Host "    - az"
+    Write-Host "    - gh"
+    Write-Host "    - terraform 1.9+"
+    Write-Host "    - docker, if building container images locally"
+    Write-Host "  Required sign-ins:"
+    Write-Host "    - az login --tenant <tenant-id>"
+    Write-Host "    - gh auth login"
+
+    foreach ($name in $required) {
+        if (Get-Command $name -ErrorAction SilentlyContinue) {
+            Write-Host "  [ok] $name"
+        } else {
+            Write-Host "  [missing] $name"
+            $missing += $name
+        }
+    }
+
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        Write-Host "  [ok] docker"
+    } else {
+        Write-Host "  [optional] docker not found; required only for local image builds"
+    }
+
+    if ($missing.Count -gt 0) {
+        throw "Install missing required tools, then rerun this script: $($missing -join ', ')"
     }
 }
 
@@ -53,6 +93,12 @@ function Add-RoleAssignment {
             --scope $Scope `
             --only-show-errors 1>$null
     }
+}
+
+Test-Prerequisites
+
+if ($CheckPrereqs) {
+    exit 0
 }
 
 Assert-Command az

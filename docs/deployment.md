@@ -51,6 +51,13 @@ The app deployment flow is:
 
 GitHub Actions needs a federated Azure identity and remote Terraform state before it can deploy. Run this once from a machine where you are signed in to both Azure CLI and GitHub CLI:
 
+Before running bootstrap, review the [bootstrap checklist](bootstrap-checklist.md)
+or run the prerequisite check:
+
+```bash
+./scripts/bootstrap-azure-oidc.sh --check-prereqs
+```
+
 PowerShell:
 
 ```powershell
