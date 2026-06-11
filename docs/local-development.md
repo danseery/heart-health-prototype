@@ -62,6 +62,28 @@ If you prefer the VS Code UI, run the `HeartHealth: Start Local App` task from t
 - Keep environment overrides in ignored `.env` files.
 - Do not export, screenshot, or commit real health information.
 
+## AI Summary Provider
+
+Local development defaults to deterministic summaries with `AI_PROVIDER=dummy`.
+To route assessment summaries to Big Brain through Azure OpenAI, set these values
+in `backend/.env`:
+
+```bash
+AI_PROVIDER=azure_openai
+AZURE_OPENAI_ENDPOINT=https://<resource-name>.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=<deployment-name>
+AZURE_OPENAI_API_KEY=<local-secret>
+AZURE_OPENAI_API_VERSION=2024-10-21
+```
+
+For Big Brain-style Azure AI Foundry model endpoints, use the
+`https://<resource-name>.services.ai.azure.com` endpoint. The app routes those
+requests to `/models/chat/completions` and uses `2024-05-01-preview` by default
+when the API version is left at `2024-10-21`.
+
+Only completed assessment summaries use this provider. Content-link summaries
+remain locally generated and cached in SQLite.
+
 ## Change Hygiene
 
 - Every behavior change should include a focused test when practical.

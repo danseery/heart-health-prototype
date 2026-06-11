@@ -29,6 +29,29 @@ def test_calculate_risk_flags_elevated_values() -> None:
     assert result["protective_signals"][0]["label"] == "Smoking Status"
 
 
+def test_low_blood_pressure_is_not_marked_as_protective() -> None:
+    answers = AnswerPayload(
+        age=39,
+        sex="male",
+        systolic_bp=88,
+        diastolic_bp=58,
+        total_cholesterol=177,
+        hdl_cholesterol=64,
+        ldl_cholesterol=91,
+        on_bp_medication=False,
+        smoking_status="never",
+        diabetes="no",
+    )
+
+    result = calculate_risk(answers)
+
+    assert all(signal["label"] != "Blood Pressure" for signal in result["protective_signals"])
+    assert any(
+        factor["label"] == "Low Blood Pressure" and factor["severity"] in {"borderline", "elevated"}
+        for factor in result["risk_factors"]
+    )
+
+
 def test_advanced_inputs_are_optional_but_can_modify_risk() -> None:
     base_answers = AnswerPayload(
         age=52,

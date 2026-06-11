@@ -34,6 +34,8 @@ jobs:
       TF_IN_AUTOMATION: true
       TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+      TF_VAR_azure_openai_deployment: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
+      TF_VAR_azure_openai_api_key: ${{ secrets.AZURE_OPENAI_API_KEY }}
 
     steps:
       - name: Checkout
@@ -117,6 +119,13 @@ jobs:
           echo "acr_login_server=$(terraform output -raw acr_login_server)" >> "$GITHUB_OUTPUT"
           echo "backend_api_base_url=$(terraform output -raw backend_api_base_url)" >> "$GITHUB_OUTPUT"
           echo "frontend_url=$(terraform output -raw frontend_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Refresh Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to ACR
         run: az acr login --name "${{ steps.tf.outputs.acr_name }}"

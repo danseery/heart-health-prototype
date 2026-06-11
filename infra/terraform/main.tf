@@ -148,6 +148,11 @@ resource "azurerm_container_app" "backend" {
     identity = azurerm_user_assigned_identity.apps.id
   }
 
+  secret {
+    name  = "azure-openai-api-key"
+    value = var.azure_openai_api_key
+  }
+
   ingress {
     external_enabled           = true
     allow_insecure_connections = false
@@ -208,6 +213,11 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "AZURE_OPENAI_API_VERSION"
         value = var.azure_openai_api_version
+      }
+
+      env {
+        name        = "AZURE_OPENAI_API_KEY"
+        secret_name = "azure-openai-api-key"
       }
 
       env {

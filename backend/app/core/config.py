@@ -18,6 +18,12 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
     ai_provider: str = Field(default="dummy", alias="AI_PROVIDER")
+    azure_openai_endpoint: str = Field(default="", alias="AZURE_OPENAI_ENDPOINT")
+    azure_openai_deployment: str = Field(default="", alias="AZURE_OPENAI_DEPLOYMENT")
+    azure_openai_api_key: str = Field(default="", alias="AZURE_OPENAI_API_KEY")
+    azure_openai_api_version: str = Field(default="2024-10-21", alias="AZURE_OPENAI_API_VERSION")
+    azure_openai_timeout_seconds: float = Field(default=20.0, alias="AZURE_OPENAI_TIMEOUT_SECONDS")
+    azure_openai_max_tokens: int = Field(default=700, alias="AZURE_OPENAI_MAX_TOKENS")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
     model_config = SettingsConfigDict(

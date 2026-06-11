@@ -86,12 +86,18 @@ The workflow expects these GitHub environment variables in the `dev` environment
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
+- `AZURE_OPENAI_DEPLOYMENT`
 - `TF_STATE_RESOURCE_GROUP_NAME`
 - `TF_STATE_STORAGE_ACCOUNT_NAME`
 - `TF_STATE_CONTAINER_NAME`
 - `TF_STATE_KEY`
 
 The bootstrap script sets these for you.
+
+The workflow also expects this GitHub environment secret in `dev` before Big
+Brain calls can succeed:
+
+- `AZURE_OPENAI_API_KEY`
 
 ## Azure OpenAI
 
@@ -100,9 +106,15 @@ Dev is configured for Azure OpenAI through the Foundry endpoint you provided:
 ```text
 AI_PROVIDER=azure_openai
 AZURE_OPENAI_ENDPOINT=https://big-brain-resource.services.ai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=<deployment-or-model-name>
 ```
 
-The current backend still uses deterministic prototype AI logic. Before live Azure OpenAI calls are enabled, provide the actual model deployment name in `infra/terraform/environments/dev.tfvars` and add the application integration using managed identity or Key Vault-backed secrets.
+The backend can now route completed assessment summaries to Big Brain when
+`AI_PROVIDER=azure_openai` is set. Azure AI Foundry endpoints ending in
+`.services.ai.azure.com` use `/models/chat/completions`; Azure OpenAI endpoints
+ending in `.openai.azure.com` use `/openai/deployments/{deployment}/chat/completions`.
+For deployed environments, store keys in Key Vault or move this integration to
+managed identity before handling real user data.
 
 If you want Azure OpenAI created inside `rg-heart-health-dev` instead of pointing to the existing Foundry resource, set:
 

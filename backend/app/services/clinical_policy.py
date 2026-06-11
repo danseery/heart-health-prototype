@@ -13,6 +13,10 @@ def apob_goal_mg_dl(answers: AnswerPayload) -> int:
     return 80 if is_secondary_prevention(answers) else 90
 
 
+def has_low_blood_pressure(answers: AnswerPayload) -> bool:
+    return answers.systolic_bp < 90 or answers.diastolic_bp < 60
+
+
 def build_risk_factors(answers: AnswerPayload) -> list[dict]:
     factors: list[dict] = []
     secondary_prevention = is_secondary_prevention(answers)
@@ -73,6 +77,21 @@ def build_risk_factors(answers: AnswerPayload) -> list[dict]:
                 value=f"{answers.systolic_bp}/{answers.diastolic_bp} mmHg",
                 severity=bp_severity,
                 explanation="Repeated elevated readings should be reviewed with a clinician.",
+            )
+        )
+
+    if has_low_blood_pressure(answers):
+        factors.append(
+            signal(
+                label="Low Blood Pressure",
+                value=f"{answers.systolic_bp}/{answers.diastolic_bp} mmHg",
+                severity="borderline"
+                if answers.systolic_bp >= 80 and answers.diastolic_bp >= 50
+                else "elevated",
+                explanation=(
+                    "Very low blood pressure can matter if it is persistent, causes symptoms, "
+                    "or is related to medications, dehydration, or another medical issue."
+                ),
             )
         )
 
@@ -143,7 +162,9 @@ def build_protective_signals(answers: AnswerPayload) -> list[dict]:
 
     if secondary_prevention:
         blood_pressure_controlled = (
-            answers.systolic_bp < 130 and answers.diastolic_bp < 80
+            answers.systolic_bp < 130
+            and answers.diastolic_bp < 80
+            and not has_low_blood_pressure(answers)
         )
         blood_pressure_explanation = (
             "Blood pressure is below a common treatment target for established ASCVD."
@@ -153,6 +174,7 @@ def build_protective_signals(answers: AnswerPayload) -> list[dict]:
             answers.systolic_bp < 120
             and answers.diastolic_bp < 80
             and not answers.on_bp_medication
+            and not has_low_blood_pressure(answers)
         )
         blood_pressure_explanation = (
             "This is within the normal blood pressure range without medication support."
