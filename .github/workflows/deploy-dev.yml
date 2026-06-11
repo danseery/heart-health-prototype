@@ -35,22 +35,10 @@ jobs:
       TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
       TF_VAR_azure_openai_deployment: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
-      TF_VAR_azure_openai_api_key: ${{ secrets.AZURE_OPENAI_API_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Validate Big Brain configuration
-        run: |
-          if [ -z "${TF_VAR_azure_openai_deployment}" ]; then
-            echo "::error::Set the AZURE_OPENAI_DEPLOYMENT variable in the GitHub dev environment."
-            exit 1
-          fi
-          if [ -z "${TF_VAR_azure_openai_api_key}" ]; then
-            echo "::error::Set the AZURE_OPENAI_API_KEY secret in the GitHub dev environment."
-            exit 1
-          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -86,6 +74,79 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover Big Brain configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          endpoint="$(awk -F '"' '/azure_openai_endpoint/ { print $2; exit }' infra/terraform/environments/dev.tfvars)"
+          if [ -z "${endpoint}" ]; then
+            echo "::error::Set azure_openai_endpoint in infra/terraform/environments/dev.tfvars."
+            exit 1
+          fi
+
+          host="${endpoint#https://}"
+          host="${host#http://}"
+          host="${host%%/*}"
+
+          case "${host}" in
+            *.services.ai.azure.com)
+              account_name="${host%.services.ai.azure.com}"
+              ;;
+            *.openai.azure.com)
+              account_name="${host%.openai.azure.com}"
+              ;;
+            *)
+              echo "::error::Unsupported Azure AI endpoint host '${host}'."
+              exit 1
+              ;;
+          esac
+
+          resource_group="$(az resource list \
+            --name "${account_name}" \
+            --resource-type "Microsoft.CognitiveServices/accounts" \
+            --query "[0].resourceGroup" \
+            --output tsv)"
+
+          if [ -z "${resource_group}" ]; then
+            echo "::error::Could not find Azure AI account '${account_name}' in the active subscription."
+            exit 1
+          fi
+
+          api_key="$(az cognitiveservices account keys list \
+            --name "${account_name}" \
+            --resource-group "${resource_group}" \
+            --query "key1" \
+            --output tsv)"
+
+          if [ -z "${api_key}" ]; then
+            echo "::error::Could not read an API key for Azure AI account '${account_name}'."
+            exit 1
+          fi
+
+          deployment="${TF_VAR_azure_openai_deployment:-}"
+          if [ -z "${deployment}" ]; then
+            mapfile -t deployments < <(az cognitiveservices account deployment list \
+              --name "${account_name}" \
+              --resource-group "${resource_group}" \
+              --query "[].name" \
+              --output tsv)
+
+            if [ "${#deployments[@]}" -eq 1 ]; then
+              deployment="${deployments[0]}"
+            else
+              echo "::error::Set AZURE_OPENAI_DEPLOYMENT in the GitHub dev environment when the account has zero or multiple deployments."
+              printf 'Discovered deployments:\n'
+              printf '%s\n' "${deployments[@]}"
+              exit 1
+            fi
+          fi
+
+          echo "::add-mask::${api_key}"
+          echo "TF_VAR_azure_openai_api_key=${api_key}" >> "${GITHUB_ENV}"
+          echo "TF_VAR_azure_openai_deployment=${deployment}" >> "${GITHUB_ENV}"
+          echo "Discovered Big Brain account '${account_name}' in resource group '${resource_group}' using deployment '${deployment}'."
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3

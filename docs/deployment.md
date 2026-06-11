@@ -86,7 +86,6 @@ The workflow expects these GitHub environment variables in the `dev` environment
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
-- `AZURE_OPENAI_DEPLOYMENT`
 - `TF_STATE_RESOURCE_GROUP_NAME`
 - `TF_STATE_STORAGE_ACCOUNT_NAME`
 - `TF_STATE_CONTAINER_NAME`
@@ -94,14 +93,16 @@ The workflow expects these GitHub environment variables in the `dev` environment
 
 The bootstrap script sets these for you.
 
-The workflow also expects this GitHub environment secret in `dev` before Big
-Brain calls can succeed:
+`AZURE_OPENAI_DEPLOYMENT` is optional when the Big Brain Azure AI account has
+exactly one deployment. If the account has zero or multiple deployments, set
+`AZURE_OPENAI_DEPLOYMENT` in the GitHub `dev` environment so the workflow knows
+which deployment to use.
 
-- `AZURE_OPENAI_API_KEY`
-
-The deploy workflow validates both values before Terraform runs. If either is
-missing or blank, the workflow stops early instead of creating an invalid empty
-Container App secret.
+No Big Brain API key is stored in GitHub secrets. After GitHub Actions signs in
+to Azure with OIDC, the deploy workflow reads the key with Azure CLI, masks it in
+logs, and passes it to Terraform only for that workflow run. The federated Azure
+identity must have permission to list keys on the Big Brain
+`Microsoft.CognitiveServices/accounts` resource.
 
 ## Azure OpenAI
 
