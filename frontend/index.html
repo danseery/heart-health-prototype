@@ -7,6 +7,21 @@
       name="description"
       content="HeartHealth AI educational heart health risk assessment workflow."
     />
+    <script>
+      (() => {
+        const storageKey = "hearty.theme";
+        const savedTheme = sessionStorage.getItem(storageKey);
+        const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme =
+          savedTheme === "dark" || savedTheme === "light"
+            ? savedTheme
+            : prefersDark
+              ? "dark"
+              : "light";
+
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
     <title>HeartHealth AI</title>
   </head>
   <body>
