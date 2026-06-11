@@ -4,7 +4,7 @@ environment         = "dev"
 
 ai_provider                  = "azure_openai"
 create_azure_openai_resource = false
-azure_openai_endpoint        = "https://big-brain-resource.services.ai.azure.com/"
+azure_openai_endpoint        = "https://big-brain.openai.azure.com/"
 azure_openai_deployment      = ""
 
 tags = {

@@ -127,20 +127,8 @@ jobs:
 
           deployment="${TF_VAR_azure_openai_deployment:-}"
           if [ -z "${deployment}" ]; then
-            mapfile -t deployments < <(az cognitiveservices account deployment list \
-              --name "${account_name}" \
-              --resource-group "${resource_group}" \
-              --query "[].name" \
-              --output tsv)
-
-            if [ "${#deployments[@]}" -eq 1 ]; then
-              deployment="${deployments[0]}"
-            else
-              echo "::error::Set AZURE_OPENAI_DEPLOYMENT in the GitHub dev environment when the account has zero or multiple deployments."
-              printf 'Discovered deployments:\n'
-              printf '%s\n' "${deployments[@]}"
-              exit 1
-            fi
+            echo "::error::Set AZURE_OPENAI_DEPLOYMENT in the GitHub dev environment."
+            exit 1
           fi
 
           echo "::add-mask::${api_key}"
