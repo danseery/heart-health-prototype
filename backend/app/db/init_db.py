@@ -10,8 +10,23 @@ DEMO_USER_ID = "usr_demo"
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    ensure_schema_updates()
     with Session(engine) as db:
         seed_demo_data(db)
+
+
+def ensure_schema_updates() -> None:
+    if engine.dialect.name != "sqlite":
+        return
+
+    with engine.begin() as conn:
+        risk_result_columns = {
+            row[1] for row in conn.exec_driver_sql("PRAGMA table_info(risk_results)")
+        }
+        if "protective_signals" not in risk_result_columns:
+            conn.exec_driver_sql(
+                "ALTER TABLE risk_results ADD COLUMN protective_signals JSON NOT NULL DEFAULT '[]'"
+            )
 
 
 def seed_demo_data(db: Session) -> None:

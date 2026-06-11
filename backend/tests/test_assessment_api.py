@@ -37,6 +37,7 @@ def test_assessment_to_results_flow() -> None:
         payload = result_response.json()
         assert payload["status"] == "completed"
         assert payload["scores"]["category"] == "borderline"
+        assert payload["protective_signals"]
         assert payload["ai_report"]["citations"]
         assert "not medical advice" in payload["ai_report"]["disclaimer"]
 
@@ -71,6 +72,41 @@ def test_assessment_accepts_optional_advanced_inputs() -> None:
         labels = [factor["label"] for factor in result.json()["risk_factors"]]
         assert "CAC Score" in labels
         assert "Family History" in labels
+
+
+def test_secondary_prevention_payload_returns_context_sensitive_signals() -> None:
+    with client:
+        session_id = client.post("/api/assessment/sessions").json()["session_id"]
+        response = client.put(
+            f"/api/assessment/sessions/{session_id}/answers",
+            json={
+                "age": 61,
+                "sex": "male",
+                "systolic_bp": 126,
+                "diastolic_bp": 76,
+                "total_cholesterol": 168,
+                "hdl_cholesterol": 58,
+                "ldl_cholesterol": 82,
+                "on_bp_medication": True,
+                "smoking_status": "former",
+                "diabetes": "no",
+                "established_ascvd": True,
+                "apob_mg_dl": 78,
+            },
+        )
+        assert response.status_code == 200
+
+        result = client.post(f"/api/assessment/sessions/{session_id}/complete")
+        assert result.status_code == 200
+        payload = result.json()
+        assert payload["scores"]["category"] == "high"
+        assert "secondary-prevention targets" in payload["ai_report"]["summary"]
+        assert any(
+            factor["label"] == "LDL Cholesterol" for factor in payload["risk_factors"]
+        )
+        assert any(
+            signal["label"] == "ApoB" for signal in payload["protective_signals"]
+        )
 
 
 def test_rejects_out_of_range_health_values() -> None:

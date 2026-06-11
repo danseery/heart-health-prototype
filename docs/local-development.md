@@ -1,30 +1,59 @@
 # Local Development
 
-This prototype runs locally only. Do not use real patient data, do not create Azure resources, and do not push changes unless explicitly approved.
+This prototype still supports local-first development. Do not use real patient data locally or in the dev Azure environment.
 
 ## Backend
 
-```powershell
-cd C:\Users\danie\OneDrive\Documents\Hearty\backend
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-Copy-Item ..\.env.example .env
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```bash
+python -m venv backend/.venv
 ```
-
-Open `http://127.0.0.1:8000/api/health`.
 
 ## Frontend
 
+Windows:
+
 ```powershell
-cd C:\Users\danie\OneDrive\Documents\Hearty\frontend
-npm install
-npm run dev
+.\backend\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+Copy-Item .env.example backend\.env
+npm install --prefix frontend
 ```
 
-Open `http://127.0.0.1:5173`.
+Linux / WSL:
+
+```bash
+backend/.venv/bin/python -m pip install --upgrade pip
+backend/.venv/bin/python -m pip install -r backend/requirements.txt
+cp .env.example backend/.env
+npm install --prefix frontend
+```
+
+## Start the App
+
+Start the full app from the repo root:
+
+```bash
+python scripts/dev.py
+```
+
+Or on Linux / WSL:
+
+```bash
+./scripts/dev.sh
+```
+
+This starts:
+
+- FastAPI on `http://127.0.0.1:8000`
+- Vite on `http://127.0.0.1:5173`
+
+Health check:
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+If you prefer the VS Code UI, run the `HeartHealth: Start Local App` task from the command palette.
 
 ## Local Data Rules
 
@@ -38,4 +67,4 @@ Open `http://127.0.0.1:5173`.
 - Every behavior change should include a focused test when practical.
 - If a test is not practical for a small UI or workflow change, update an MD file to capture the decision, tradeoff, or user-facing behavior.
 - Keep commits on named feature branches until the slice is tested and approved for merge into `main`.
-- Do not push or create Azure infrastructure unless explicitly approved.
+- Do not push or create Azure infrastructure unless explicitly approved. Approved infrastructure changes should go through the Terraform/GitHub Actions flow in [deployment](deployment.md).

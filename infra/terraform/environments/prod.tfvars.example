@@ -1,0 +1,15 @@
+resource_group_name = "rg-heart-health-prod"
+location            = "eastus2"
+environment         = "prod"
+
+ai_provider             = "azure_openai"
+create_azure_openai_resource = true
+azure_openai_endpoint   = ""
+azure_openai_deployment = ""
+
+key_vault_purge_protection_enabled = true
+
+tags = {
+  "cost-center" = "side-projects"
+  "data-class"  = "production-sensitive"
+}

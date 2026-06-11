@@ -32,6 +32,7 @@ class AnswerPayload(BaseModel):
     on_bp_medication: bool
     smoking_status: SmokingStatus
     diabetes: DiabetesStatus
+    established_ascvd: bool | None = None
     family_history_premature_ascvd: bool | None = None
     chronic_kidney_disease: bool | None = None
     metabolic_syndrome: bool | None = None
@@ -73,7 +74,7 @@ class AssessmentAnswersResponse(BaseModel):
     saved_fields: list[str]
 
 
-class RiskFactor(BaseModel):
+class ClinicalSignal(BaseModel):
     label: str
     value: str
     severity: str
@@ -105,5 +106,6 @@ class ResultResponse(BaseModel):
     session_id: str
     status: str
     scores: dict[str, Any]
-    risk_factors: list[RiskFactor]
+    risk_factors: list[ClinicalSignal]
+    protective_signals: list[ClinicalSignal]
     ai_report: AIReportResponse

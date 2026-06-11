@@ -1,0 +1,157 @@
+name: Deploy dev
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "infra/terraform/**"
+      - ".github/workflows/deploy-dev.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Provision and deploy dev
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      TF_IN_AUTOMATION: true
+      TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        env:
+          PYTHONPATH: backend
+        run: pytest backend/tests
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Build frontend
+        run: npm run build --prefix frontend
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: infra/terraform
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RESOURCE_GROUP_NAME }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT_NAME }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER_NAME }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="use_oidc=true" \
+            -backend-config="use_azuread_auth=true" \
+            -backend-config="client_id=${{ vars.AZURE_CLIENT_ID }}" \
+            -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}" \
+            -backend-config="subscription_id=${{ vars.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Terraform fmt
+        working-directory: infra/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        working-directory: infra/terraform
+        run: terraform validate
+
+      - name: Provision shared dev infrastructure
+        working-directory: infra/terraform
+        run: |
+          terraform apply -auto-approve \
+            -var-file="environments/dev.tfvars" \
+            -var="create_container_apps=false"
+
+      - name: Read Terraform outputs
+        id: tf
+        working-directory: infra/terraform
+        run: |
+          echo "acr_name=$(terraform output -raw acr_name)" >> "$GITHUB_OUTPUT"
+          echo "acr_login_server=$(terraform output -raw acr_login_server)" >> "$GITHUB_OUTPUT"
+          echo "backend_api_base_url=$(terraform output -raw backend_api_base_url)" >> "$GITHUB_OUTPUT"
+          echo "frontend_url=$(terraform output -raw frontend_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to ACR
+        run: az acr login --name "${{ steps.tf.outputs.acr_name }}"
+
+      - name: Build backend image
+        run: |
+          docker build \
+            --file backend/Dockerfile \
+            --tag "${{ steps.tf.outputs.acr_login_server }}/hearthealth-api:${{ github.sha }}" \
+            backend
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            --file frontend/Dockerfile \
+            --build-arg "VITE_API_BASE_URL=${{ steps.tf.outputs.backend_api_base_url }}" \
+            --tag "${{ steps.tf.outputs.acr_login_server }}/hearthealth-web:${{ github.sha }}" \
+            frontend
+
+      - name: Push images
+        run: |
+          docker push "${{ steps.tf.outputs.acr_login_server }}/hearthealth-api:${{ github.sha }}"
+          docker push "${{ steps.tf.outputs.acr_login_server }}/hearthealth-web:${{ github.sha }}"
+
+      - name: Deploy container apps
+        working-directory: infra/terraform
+        run: |
+          terraform apply -auto-approve \
+            -var-file="environments/dev.tfvars" \
+            -var="create_container_apps=true" \
+            -var="container_image_tag=${{ github.sha }}"
+
+      - name: Show dev URLs
+        working-directory: infra/terraform
+        run: |
+          echo "Frontend: $(terraform output -raw frontend_url)"
+          echo "Backend: $(terraform output -raw backend_url)"
+          echo "Health: $(terraform output -raw backend_url)/api/health"

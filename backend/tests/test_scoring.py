@@ -26,6 +26,7 @@ def test_calculate_risk_flags_elevated_values() -> None:
         "Blood Pressure",
         "HDL Cholesterol",
     ]
+    assert result["protective_signals"][0]["label"] == "Smoking Status"
 
 
 def test_advanced_inputs_are_optional_but_can_modify_risk() -> None:
@@ -55,3 +56,34 @@ def test_advanced_inputs_are_optional_but_can_modify_risk() -> None:
     assert advanced["ascvd_risk"] > base["ascvd_risk"]
     assert "CAC Score" in [factor["label"] for factor in advanced["risk_factors"]]
     assert "Family History" in [factor["label"] for factor in advanced["risk_factors"]]
+
+
+def test_secondary_prevention_uses_tighter_ldl_targets() -> None:
+    answers = AnswerPayload(
+        age=61,
+        sex="male",
+        systolic_bp=126,
+        diastolic_bp=76,
+        total_cholesterol=168,
+        hdl_cholesterol=58,
+        ldl_cholesterol=82,
+        on_bp_medication=True,
+        smoking_status="former",
+        diabetes="no",
+        established_ascvd=True,
+        apob_mg_dl=78,
+    )
+
+    result = calculate_risk(answers)
+
+    assert result["category"] == "high"
+    assert result["ascvd_risk"] >= 20
+    assert result["risk_factors"][0]["label"] == "Established ASCVD"
+    assert any(
+        factor["label"] == "LDL Cholesterol" and factor["severity"] == "elevated"
+        for factor in result["risk_factors"]
+    )
+    assert any(
+        signal["label"] == "ApoB" and signal["severity"] == "positive"
+        for signal in result["protective_signals"]
+    )
