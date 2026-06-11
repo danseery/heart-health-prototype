@@ -121,6 +121,7 @@ Dev is configured for the `big-brain` Azure OpenAI resource:
 AI_PROVIDER=azure_openai
 AZURE_OPENAI_ENDPOINT=https://big-brain.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT=gpt-5.4
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
 ```
 
 The backend can now route completed assessment summaries to Big Brain when
