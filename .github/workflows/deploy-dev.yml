@@ -40,6 +40,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Require PR merge commit
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${HEAD_COMMIT_MESSAGE}" =~ ^Merge\ pull\ request\ #[0-9]+ ]]; then
+            echo "::error::Refusing to deploy a non-PR-merge update to main. Open a pull request and use GitHub's merge-commit option."
+            exit 1
+          fi
+
+          echo "Deploying GitHub pull request merge commit."
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
