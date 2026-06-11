@@ -41,6 +41,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate Big Brain configuration
+        run: |
+          if [ -z "${TF_VAR_azure_openai_deployment}" ]; then
+            echo "::error::Set the AZURE_OPENAI_DEPLOYMENT variable in the GitHub dev environment."
+            exit 1
+          fi
+          if [ -z "${TF_VAR_azure_openai_api_key}" ]; then
+            echo "::error::Set the AZURE_OPENAI_API_KEY secret in the GitHub dev environment."
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

@@ -148,9 +148,13 @@ resource "azurerm_container_app" "backend" {
     identity = azurerm_user_assigned_identity.apps.id
   }
 
-  secret {
-    name  = "azure-openai-api-key"
-    value = var.azure_openai_api_key
+  dynamic "secret" {
+    for_each = var.azure_openai_api_key == "" ? [] : [var.azure_openai_api_key]
+
+    content {
+      name  = "azure-openai-api-key"
+      value = secret.value
+    }
   }
 
   ingress {
@@ -215,9 +219,13 @@ resource "azurerm_container_app" "backend" {
         value = var.azure_openai_api_version
       }
 
-      env {
-        name        = "AZURE_OPENAI_API_KEY"
-        secret_name = "azure-openai-api-key"
+      dynamic "env" {
+        for_each = var.azure_openai_api_key == "" ? [] : [1]
+
+        content {
+          name        = "AZURE_OPENAI_API_KEY"
+          secret_name = "azure-openai-api-key"
+        }
       }
 
       env {

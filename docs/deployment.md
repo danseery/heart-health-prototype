@@ -99,6 +99,10 @@ Brain calls can succeed:
 
 - `AZURE_OPENAI_API_KEY`
 
+The deploy workflow validates both values before Terraform runs. If either is
+missing or blank, the workflow stops early instead of creating an invalid empty
+Container App secret.
+
 ## Azure OpenAI
 
 Dev is configured for Azure OpenAI through the Foundry endpoint you provided:
