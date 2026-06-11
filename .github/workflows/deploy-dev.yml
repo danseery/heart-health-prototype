@@ -118,6 +118,13 @@ jobs:
           echo "backend_api_base_url=$(terraform output -raw backend_api_base_url)" >> "$GITHUB_OUTPUT"
           echo "frontend_url=$(terraform output -raw frontend_url)" >> "$GITHUB_OUTPUT"
 
+      - name: Refresh Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
       - name: Log in to ACR
         run: az acr login --name "${{ steps.tf.outputs.acr_name }}"
 
