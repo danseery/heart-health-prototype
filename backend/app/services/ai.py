@@ -1,4 +1,5 @@
 import json
+from hashlib import sha256
 import logging
 from typing import Any
 
@@ -9,6 +10,9 @@ from app.schemas import AnswerPayload
 
 
 logger = logging.getLogger("hearthealth.ai")
+
+ASSESSMENT_SUMMARY_PROMPT_VERSION = "assessment-summary-v1"
+ASSESSMENT_SUMMARY_TEMPERATURE = 0.2
 
 EDUCATIONAL_DISCLAIMER = (
     "This is educational information based on simplified calculations and curated "
@@ -37,11 +41,16 @@ Use only the provided assessment results, risk signals, protective signals, and 
 
 Write in a warm, calm, professional tone. Avoid alarmist language. Be specific enough to feel personalized, but do not overstate certainty."""
 
+ASSESSMENT_SUMMARY_SYSTEM_PROMPT_HASH = sha256(
+    ASSESSMENT_SUMMARY_SYSTEM_PROMPT.encode("utf-8")
+).hexdigest()
+
 
 def generate_assessment_summary(
     answers: AnswerPayload,
     risk: dict,
     settings: Settings | None = None,
+    include_metadata: bool = False,
 ) -> dict:
     active_settings = settings or get_settings()
     provider = active_settings.ai_provider.strip().lower()
@@ -49,16 +58,70 @@ def generate_assessment_summary(
 
     if provider == "azure_openai":
         try:
-            return generate_azure_assessment_summary(answers, risk, active_settings)
+            report = generate_azure_assessment_summary(answers, risk, active_settings)
+            return _with_generation_metadata(report, "azure_openai", include_metadata)
         except Exception:
             logger.exception(
                 "AI summary provider failed provider=azure_openai fallback=dummy"
             )
-            return generate_dummy_assessment_summary(answers, risk)
+            report = generate_dummy_assessment_summary(answers, risk)
+            return _with_generation_metadata(report, "dummy", include_metadata)
     if provider == "dummy":
-        return generate_dummy_assessment_summary(answers, risk)
+        report = generate_dummy_assessment_summary(answers, risk)
+        return _with_generation_metadata(report, "dummy", include_metadata)
 
     raise ValueError(f"Unsupported AI provider: {active_settings.ai_provider}")
+
+
+def build_assessment_summary_cache_key(
+    answers: AnswerPayload,
+    risk: dict,
+    settings: Settings | None = None,
+) -> str:
+    active_settings = settings or get_settings()
+    provider = active_settings.ai_provider.strip().lower()
+    cache_payload = {
+        "version": ASSESSMENT_SUMMARY_PROMPT_VERSION,
+        "provider": provider,
+        "provider_config": _provider_cache_context(active_settings, provider),
+        "temperature": ASSESSMENT_SUMMARY_TEMPERATURE,
+        "system_prompt_hash": ASSESSMENT_SUMMARY_SYSTEM_PROMPT_HASH,
+        "citations": CITATIONS,
+        "answers": answers.model_dump(mode="json"),
+        "risk": risk,
+    }
+    canonical_payload = json.dumps(
+        cache_payload,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return sha256(canonical_payload.encode("utf-8")).hexdigest()
+
+
+def _provider_cache_context(settings: Settings, provider: str) -> dict:
+    if provider == "azure_openai":
+        endpoint = settings.azure_openai_endpoint.rstrip("/")
+        return {
+            "endpoint": endpoint,
+            "endpoint_type": (
+                "foundry_models" if is_foundry_models_endpoint(endpoint) else "azure_openai"
+            ),
+            "deployment": settings.azure_openai_deployment.strip(),
+            "api_version": settings.azure_openai_api_version,
+            "max_tokens": settings.azure_openai_max_tokens,
+        }
+    return {}
+
+
+def _with_generation_metadata(
+    report: dict,
+    generated_by: str,
+    include_metadata: bool,
+) -> dict:
+    if not include_metadata:
+        return report
+    return {**report, "_generated_by": generated_by}
 
 
 def generate_azure_assessment_summary(
@@ -82,7 +145,7 @@ def generate_azure_assessment_summary(
             {"role": "system", "content": ASSESSMENT_SUMMARY_SYSTEM_PROMPT},
             {"role": "user", "content": build_assessment_summary_prompt(answers, risk)},
         ],
-        "temperature": 0.2,
+        "temperature": ASSESSMENT_SUMMARY_TEMPERATURE,
         "max_tokens": settings.azure_openai_max_tokens,
         "response_format": {"type": "json_object"},
     }

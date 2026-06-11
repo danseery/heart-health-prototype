@@ -4,12 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.db.init_db import DEMO_USER_ID
 from app.db.session import get_db
 from app.models import (
     AIReport,
     AssessmentAnswer,
     AssessmentSession,
+    AssessmentSummaryCache,
     AssessmentStatus,
     AuditEvent,
     RiskResult,
@@ -22,7 +24,11 @@ from app.schemas import (
     AssessmentSessionResponse,
     ResultResponse,
 )
-from app.services.ai import generate_assessment_summary
+from app.services.ai import (
+    ASSESSMENT_SUMMARY_PROMPT_VERSION,
+    build_assessment_summary_cache_key,
+    generate_assessment_summary,
+)
 from app.services.scoring import calculate_risk
 
 router = APIRouter(prefix="/assessment", tags=["assessment"])
@@ -95,7 +101,35 @@ def complete_session(session_id: str, db: Session = Depends(get_db)) -> ResultRe
     session = _get_demo_session(db, session_id)
     answers = _answers_for_session(db, session_id)
     risk = calculate_risk(answers)
-    report = generate_assessment_summary(answers, risk)
+    settings = get_settings()
+    cache_key = build_assessment_summary_cache_key(answers, risk, settings)
+    cached_report = db.get(AssessmentSummaryCache, cache_key)
+    if cached_report:
+        report = {
+            "summary": cached_report.summary,
+            "disclaimer": cached_report.disclaimer,
+            "citations": cached_report.citations,
+        }
+    else:
+        report = generate_assessment_summary(
+            answers,
+            risk,
+            settings=settings,
+            include_metadata=True,
+        )
+        generated_by = str(report.pop("_generated_by", settings.ai_provider)).strip().lower()
+        requested_provider = settings.ai_provider.strip().lower()
+        if generated_by == requested_provider:
+            db.add(
+                AssessmentSummaryCache(
+                    cache_key=cache_key,
+                    summary=report["summary"],
+                    disclaimer=report["disclaimer"],
+                    citations=report["citations"],
+                    provider=generated_by,
+                    prompt_version=ASSESSMENT_SUMMARY_PROMPT_VERSION,
+                )
+            )
 
     db.query(RiskResult).filter(RiskResult.session_id == session_id).delete()
     db.query(AIReport).filter(AIReport.session_id == session_id).delete()
