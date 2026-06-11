@@ -93,10 +93,10 @@ The workflow expects these GitHub environment variables in the `dev` environment
 
 The bootstrap script sets these for you.
 
-`AZURE_OPENAI_DEPLOYMENT` is optional when the Big Brain Azure AI account has
-exactly one deployment. If the account has zero or multiple deployments, set
-`AZURE_OPENAI_DEPLOYMENT` in the GitHub `dev` environment so the workflow knows
-which deployment to use.
+Set `AZURE_OPENAI_DEPLOYMENT` in the GitHub `dev` environment to the Azure
+OpenAI deployment name the backend should use. Dev currently uses `gpt-5.4`.
+The deploy workflow intentionally does not infer a deployment from the Azure
+account because multiple chat, embedding, or test deployments may exist.
 
 No Big Brain API key is stored in GitHub secrets. After GitHub Actions signs in
 to Azure with OIDC, the deploy workflow reads the key with Azure CLI, masks it in
@@ -106,12 +106,12 @@ identity must have permission to list keys on the Big Brain
 
 ## Azure OpenAI
 
-Dev is configured for Azure OpenAI through the Foundry endpoint you provided:
+Dev is configured for the `big-brain` Azure OpenAI resource:
 
 ```text
 AI_PROVIDER=azure_openai
-AZURE_OPENAI_ENDPOINT=https://big-brain-resource.services.ai.azure.com/
-AZURE_OPENAI_DEPLOYMENT=<deployment-or-model-name>
+AZURE_OPENAI_ENDPOINT=https://big-brain.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-5.4
 ```
 
 The backend can now route completed assessment summaries to Big Brain when
