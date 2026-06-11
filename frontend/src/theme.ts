@@ -13,6 +13,15 @@ export function loadSavedTheme(): ThemeName | null {
   return savedTheme === "dark" || savedTheme === "light" ? savedTheme : null;
 }
 
+export function resolveInitialTheme(): ThemeName {
+  if (typeof window === "undefined") return "light";
+
+  const savedTheme = loadSavedTheme();
+  if (savedTheme) return savedTheme;
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function saveTheme(theme: ThemeName) {
   if (typeof window === "undefined") return;
 
