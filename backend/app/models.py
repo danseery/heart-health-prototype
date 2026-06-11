@@ -154,6 +154,23 @@ class AIReport(Base):
     session: Mapped[AssessmentSession] = relationship(back_populates="report")
 
 
+class AssessmentSummaryCache(Base):
+    __tablename__ = "assessment_summary_cache"
+
+    cache_key: Mapped[str] = mapped_column(String, primary_key=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    disclaimer: Mapped[str] = mapped_column(Text, nullable=False)
+    citations: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String, nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    data_classification: Mapped[str] = mapped_column(
+        String,
+        default=DataClassification.SENSITIVE_HEALTH,
+        nullable=False,
+    )
+
+
 class ContentItem(Base):
     __tablename__ = "content_items"
 

@@ -3,7 +3,7 @@ from sqlalchemy import delete
 
 from app.db.session import SessionLocal
 from app.main import app
-from app.models import ContentSummary
+from app.models import AssessmentSummaryCache, ContentSummary
 
 
 client = TestClient(app)
@@ -11,6 +11,10 @@ client = TestClient(app)
 
 def test_assessment_to_results_flow() -> None:
     with client:
+        with SessionLocal() as db:
+            db.execute(delete(AssessmentSummaryCache))
+            db.commit()
+
         session_response = client.post("/api/assessment/sessions")
         assert session_response.status_code == 201
         session_id = session_response.json()["session_id"]
@@ -107,6 +111,66 @@ def test_secondary_prevention_payload_returns_context_sensitive_signals() -> Non
         assert any(
             signal["label"] == "ApoB" for signal in payload["protective_signals"]
         )
+
+
+def test_assessment_summary_is_reused_for_identical_inputs(monkeypatch) -> None:
+    from app.api import assessment
+
+    calls = 0
+
+    def fake_generate_assessment_summary(*args, **kwargs) -> dict:
+        nonlocal calls
+        calls += 1
+        report = {
+            "summary": "Cached personalized summary.",
+            "disclaimer": "Educational only.",
+            "citations": [],
+        }
+        if kwargs.get("include_metadata"):
+            report["_generated_by"] = "dummy"
+        return report
+
+    monkeypatch.setattr(
+        assessment,
+        "generate_assessment_summary",
+        fake_generate_assessment_summary,
+    )
+    answers = {
+        "age": 54,
+        "sex": "female",
+        "systolic_bp": 138,
+        "diastolic_bp": 88,
+        "total_cholesterol": 214,
+        "hdl_cholesterol": 44,
+        "ldl_cholesterol": 148,
+        "on_bp_medication": False,
+        "smoking_status": "never",
+        "diabetes": "no",
+    }
+
+    with client:
+        with SessionLocal() as db:
+            db.execute(delete(AssessmentSummaryCache))
+            db.commit()
+
+        first_session_id = client.post("/api/assessment/sessions").json()["session_id"]
+        assert client.put(
+            f"/api/assessment/sessions/{first_session_id}/answers",
+            json=answers,
+        ).status_code == 200
+        first = client.post(f"/api/assessment/sessions/{first_session_id}/complete")
+        assert first.status_code == 200
+
+        second_session_id = client.post("/api/assessment/sessions").json()["session_id"]
+        assert client.put(
+            f"/api/assessment/sessions/{second_session_id}/answers",
+            json=answers,
+        ).status_code == 200
+        second = client.post(f"/api/assessment/sessions/{second_session_id}/complete")
+        assert second.status_code == 200
+
+    assert calls == 1
+    assert second.json()["ai_report"]["summary"] == "Cached personalized summary."
 
 
 def test_rejects_out_of_range_health_values() -> None:
