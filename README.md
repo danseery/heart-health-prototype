@@ -35,19 +35,19 @@ The initial mockups cover six core experiences:
 
 ## Status
 
-This repository is starting as a local-first product workspace for the HeartHealth AI concept and website mockups.
+This repository is a product workspace for the HeartHealth AI concept and website mockups. It now includes the first Azure dev-environment deployment scaffold.
 
 ## Application Direction
-
-The implementation is intentionally local-only until Azure infrastructure work is explicitly approved.
 
 - Frontend: React + TypeScript + Vite
 - Backend: Python + FastAPI
 - Local data: SQLite with synthetic seed data
 - AI: pluggable provider interface with a dummy local provider first
-- Security: no real patient data, no committed secrets, no Azure resources, no production pushes
+- Deployment: Terraform + GitHub Actions + Azure Container Apps for the dev environment
+- Security: no real patient data, no committed secrets, OIDC-based Azure deploys, managed identity for Azure resources
 
 See [local development](docs/local-development.md) and [security baseline](docs/security-baseline.md).
+See [Azure dev deployment](docs/deployment.md) for the infrastructure and CI/CD setup.
 
 ## Local Run
 

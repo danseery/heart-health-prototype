@@ -26,6 +26,8 @@ The prototype is local-only, but it starts with production-shaped security bound
 
 ## Cloud Readiness
 
-- No Azure resources are created during local prototype work.
-- Future cloud services should use managed identity where possible.
-- Secrets should move to Azure Key Vault only after infrastructure work is approved.
+- Azure resources are created only through the approved Terraform/GitHub Actions deployment flow.
+- GitHub Actions authenticates to Azure through OIDC federated credentials, not stored client secrets.
+- Cloud services should use managed identity where possible.
+- Secrets should be stored in Azure Key Vault or GitHub secrets only when they cannot be replaced with managed identity.
+- Terraform state must be stored in the Azure Storage backend created by the bootstrap script and treated as sensitive operational data.

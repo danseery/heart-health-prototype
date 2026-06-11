@@ -1,6 +1,6 @@
 # Local Development
 
-This prototype runs locally only. Do not use real patient data, do not create Azure resources, and do not push changes unless explicitly approved.
+This prototype still supports local-first development. Do not use real patient data locally or in the dev Azure environment.
 
 ## Backend
 
@@ -67,4 +67,4 @@ If you prefer the VS Code UI, run the `HeartHealth: Start Local App` task from t
 - Every behavior change should include a focused test when practical.
 - If a test is not practical for a small UI or workflow change, update an MD file to capture the decision, tradeoff, or user-facing behavior.
 - Keep commits on named feature branches until the slice is tested and approved for merge into `main`.
-- Do not push or create Azure infrastructure unless explicitly approved.
+- Do not push or create Azure infrastructure unless explicitly approved. Approved infrastructure changes should go through the Terraform/GitHub Actions flow in [deployment](deployment.md).
