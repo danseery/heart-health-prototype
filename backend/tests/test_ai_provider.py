@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Any
 
+import httpx
+
 from app.core.config import Settings
 from app.schemas import AnswerPayload
 from app.services import ai
@@ -140,3 +142,61 @@ def test_big_brain_foundry_endpoint_uses_models_chat_route() -> None:
 
     assert url == "https://big-brain-resource.services.ai.azure.com/models/chat/completions"
     assert api_version == "2024-05-01-preview"
+
+
+def test_azure_openai_failure_falls_back_to_dummy_summary(monkeypatch, caplog) -> None:
+    class FakeClient:
+        def __init__(self, timeout: float) -> None:
+            return None
+
+        def __enter__(self) -> "FakeClient":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def post(self, *args: object, **kwargs: object) -> None:
+            raise httpx.HTTPError("boom")
+
+    monkeypatch.setattr(ai.httpx, "Client", FakeClient)
+    caplog.set_level(logging.INFO, logger="hearthealth.ai")
+
+    answers = AnswerPayload(
+        age=52,
+        sex="female",
+        systolic_bp=138,
+        diastolic_bp=88,
+        total_cholesterol=214,
+        hdl_cholesterol=44,
+        ldl_cholesterol=148,
+        on_bp_medication=False,
+        smoking_status="never",
+        diabetes="no",
+    )
+    risk = {
+        "ascvd_risk": 5.9,
+        "framingham_risk": 9.2,
+        "heart_age": 59,
+        "category": "borderline",
+        "risk_factors": [
+            {
+                "label": "LDL Cholesterol",
+                "value": "148 mg/dL",
+                "severity": "elevated",
+                "explanation": "LDL cholesterol is one contributor.",
+            }
+        ],
+        "protective_signals": [],
+    }
+    settings = Settings(
+        AI_PROVIDER="azure_openai",
+        AZURE_OPENAI_ENDPOINT="https://big-brain.openai.azure.com/",
+        AZURE_OPENAI_DEPLOYMENT="gpt-5.4",
+        AZURE_OPENAI_API_KEY="test-key",
+    )
+
+    report = ai.generate_assessment_summary(answers, risk, settings=settings)
+
+    assert "Your estimated 10-year ASCVD-style risk is 5.9%" in report["summary"]
+    assert report["disclaimer"] == ai.EDUCATIONAL_DISCLAIMER
+    assert "AI summary provider failed provider=azure_openai fallback=dummy" in caplog.text

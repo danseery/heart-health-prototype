@@ -48,7 +48,13 @@ def generate_assessment_summary(
     logger.info("AI summary provider selected provider=%s", provider)
 
     if provider == "azure_openai":
-        return generate_azure_assessment_summary(answers, risk, active_settings)
+        try:
+            return generate_azure_assessment_summary(answers, risk, active_settings)
+        except Exception:
+            logger.exception(
+                "AI summary provider failed provider=azure_openai fallback=dummy"
+            )
+            return generate_dummy_assessment_summary(answers, risk)
     if provider == "dummy":
         return generate_dummy_assessment_summary(answers, risk)
 
