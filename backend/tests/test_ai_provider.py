@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any
 
 from app.core.config import Settings
@@ -6,10 +7,13 @@ from app.schemas import AnswerPayload
 from app.services import ai
 
 
-def test_azure_openai_summary_uses_structured_prompt(monkeypatch) -> None:
+def test_azure_openai_summary_uses_structured_prompt(monkeypatch, caplog) -> None:
     captured: dict[str, Any] = {}
 
     class FakeResponse:
+        status_code = 200
+        headers = {"x-ms-request-id": "req_test_123"}
+
         def raise_for_status(self) -> None:
             return None
 
@@ -60,6 +64,7 @@ def test_azure_openai_summary_uses_structured_prompt(monkeypatch) -> None:
             return FakeResponse()
 
     monkeypatch.setattr(ai.httpx, "Client", FakeClient)
+    caplog.set_level(logging.INFO, logger="hearthealth.ai")
 
     answers = AnswerPayload(
         age=52,
@@ -119,6 +124,9 @@ def test_azure_openai_summary_uses_structured_prompt(monkeypatch) -> None:
     assert "You are HeartHealth AI" in captured["payload"]["messages"][0]["content"]
     assert "Return JSON only with this shape" in captured["payload"]["messages"][1]["content"]
     assert '"cac_score": 0' in captured["payload"]["messages"][1]["content"]
+    assert "AI summary request starting provider=azure_openai" in caplog.text
+    assert "AI summary response received provider=azure_openai status_code=200" in caplog.text
+    assert "request_id=req_test_123" in caplog.text
 
 
 def test_big_brain_foundry_endpoint_uses_models_chat_route() -> None:

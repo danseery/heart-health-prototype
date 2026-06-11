@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any
 
 import httpx
@@ -6,6 +7,8 @@ import httpx
 from app.core.config import Settings, get_settings
 from app.schemas import AnswerPayload
 
+
+logger = logging.getLogger("hearthealth.ai")
 
 EDUCATIONAL_DISCLAIMER = (
     "This is educational information based on simplified calculations and curated "
@@ -66,6 +69,7 @@ def generate_azure_assessment_summary(
         )
 
     url, api_version = azure_chat_endpoint(endpoint, deployment, settings.azure_openai_api_version)
+    endpoint_type = "foundry_models" if is_foundry_models_endpoint(endpoint) else "azure_openai"
     payload = {
         "messages": [
             {"role": "system", "content": ASSESSMENT_SUMMARY_SYSTEM_PROMPT},
@@ -78,12 +82,29 @@ def generate_azure_assessment_summary(
     if is_foundry_models_endpoint(endpoint):
         payload["model"] = deployment
 
+    logger.info(
+        "AI summary request starting provider=azure_openai endpoint_type=%s "
+        "deployment=%s api_version=%s timeout_seconds=%s max_tokens=%s",
+        endpoint_type,
+        deployment,
+        api_version,
+        settings.azure_openai_timeout_seconds,
+        settings.azure_openai_max_tokens,
+    )
     with httpx.Client(timeout=settings.azure_openai_timeout_seconds) as client:
         response = client.post(
             url,
             params={"api-version": api_version},
             headers={"Content-Type": "application/json", "api-key": api_key},
             json=payload,
+        )
+        logger.info(
+            "AI summary response received provider=azure_openai status_code=%s "
+            "request_id=%s",
+            response.status_code,
+            response.headers.get("x-ms-request-id")
+            or response.headers.get("apim-request-id")
+            or "unavailable",
         )
         response.raise_for_status()
 
@@ -94,6 +115,13 @@ def generate_azure_assessment_summary(
     if not summary:
         raise ValueError("Azure OpenAI summary response did not include a summary.")
 
+    logger.info(
+        "AI summary generated provider=azure_openai endpoint_type=%s request_id=%s",
+        endpoint_type,
+        response.headers.get("x-ms-request-id")
+        or response.headers.get("apim-request-id")
+        or "unavailable",
+    )
     return {
         "summary": summary,
         "disclaimer": disclaimer,
