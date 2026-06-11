@@ -169,6 +169,7 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -var-file="environments/dev.tfvars" \
+            -var="azure_openai_deployment=${TF_VAR_azure_openai_deployment}" \
             -var="create_container_apps=false"
 
       - name: Read Terraform outputs
@@ -215,6 +216,7 @@ jobs:
         run: |
           terraform apply -auto-approve \
             -var-file="environments/dev.tfvars" \
+            -var="azure_openai_deployment=${TF_VAR_azure_openai_deployment}" \
             -var="create_container_apps=true" \
             -var="container_image_tag=${{ github.sha }}"
 
