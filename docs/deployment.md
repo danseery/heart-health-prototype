@@ -103,7 +103,9 @@ The bootstrap script sets these for you.
 Set `AZURE_OPENAI_DEPLOYMENT` in the GitHub `dev` environment to the Azure
 OpenAI deployment name the backend should use. Dev currently uses `gpt-5.4`.
 The deploy workflow intentionally does not infer a deployment from the Azure
-account because multiple chat, embedding, or test deployments may exist.
+account because multiple chat, embedding, or test deployments may exist. The
+workflow passes this as an explicit Terraform `-var` so it overrides the blank
+placeholder value kept in `infra/terraform/environments/dev.tfvars`.
 
 No Big Brain API key is stored in GitHub secrets. After GitHub Actions signs in
 to Azure with OIDC, the deploy workflow reads the key with Azure CLI, masks it in
