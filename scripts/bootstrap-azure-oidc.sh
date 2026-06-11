@@ -16,6 +16,10 @@ usage() {
   cat <<'USAGE'
 Bootstrap Azure OIDC and remote Terraform state for GitHub Actions.
 
+Usage:
+  ./scripts/bootstrap-azure-oidc.sh
+  ./scripts/bootstrap-azure-oidc.sh --check-prereqs
+
 Environment variable overrides:
   SUBSCRIPTION_ID
   TENANT_ID
@@ -30,8 +34,55 @@ Environment variable overrides:
 USAGE
 }
 
+check_prereqs() {
+  local missing=0
+
+  cat <<'CHECKLIST'
+Bootstrap prerequisite checklist:
+  Local development:
+    - git
+    - python 3.12+
+    - node 22+
+    - npm
+  Azure dev bootstrap/deploy:
+    - az
+    - gh
+    - terraform 1.9+
+    - docker, if building container images locally
+  Required sign-ins:
+    - az login --tenant <tenant-id>
+    - gh auth login
+CHECKLIST
+
+  for name in git python node npm az gh terraform; do
+    if command -v "$name" >/dev/null 2>&1; then
+      printf '  [ok] %s\n' "$name"
+    else
+      printf '  [missing] %s\n' "$name" >&2
+      missing=1
+    fi
+  done
+
+  if command -v docker >/dev/null 2>&1; then
+    printf '  [ok] docker\n'
+  else
+    printf '  [optional] docker not found; required only for local image builds\n'
+  fi
+
+  if [[ "$missing" -ne 0 ]]; then
+    echo
+    echo "Install missing required tools, then rerun this script." >&2
+    exit 1
+  fi
+}
+
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   usage
+  exit 0
+fi
+
+if [[ "${1:-}" == "--check-prereqs" ]]; then
+  check_prereqs
   exit 0
 fi
 
@@ -69,6 +120,8 @@ add_role_assignment() {
       --only-show-errors >/dev/null
   fi
 }
+
+check_prereqs
 
 require_command az
 require_command gh

@@ -48,6 +48,7 @@ This repository is a product workspace for the HeartHealth AI concept and websit
 
 See [local development](docs/local-development.md) and [security baseline](docs/security-baseline.md).
 See [Azure dev deployment](docs/deployment.md) for the infrastructure and CI/CD setup.
+See [bootstrap checklist](docs/bootstrap-checklist.md) for tools and sign-ins required after cloning.
 
 ## Local Run
 
