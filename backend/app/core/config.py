@@ -13,6 +13,7 @@ class Settings(BaseSettings):
         default="http://localhost:5173,http://127.0.0.1:5173",
         alias="FRONTEND_ORIGINS",
     )
+    frontend_origin_regex: str = Field(default="", alias="FRONTEND_ORIGIN_REGEX")
     database_url: str = Field(
         default="sqlite:///./local_data/hearthealth_dev.db",
         alias="DATABASE_URL",
@@ -39,6 +40,10 @@ class Settings(BaseSettings):
             for origin in self.frontend_origins.split(",")
             if origin.strip()
         ]
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        return self.frontend_origin_regex.strip() or None
 
 
 @lru_cache
