@@ -126,6 +126,7 @@ def test_azure_openai_summary_uses_structured_prompt(monkeypatch, caplog) -> Non
     assert '"cac_score": 0' in captured["payload"]["messages"][1]["content"]
     assert "AI summary request starting provider=azure_openai" in caplog.text
     assert "AI summary response received provider=azure_openai status_code=200" in caplog.text
+    assert "AI summary provider selected provider=azure_openai" in caplog.text
     assert "request_id=req_test_123" in caplog.text
 
 
