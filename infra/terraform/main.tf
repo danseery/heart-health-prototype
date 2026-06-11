@@ -149,11 +149,11 @@ resource "azurerm_container_app" "backend" {
   }
 
   dynamic "secret" {
-    for_each = var.azure_openai_api_key == "" ? [] : [var.azure_openai_api_key]
+    for_each = nonsensitive(var.azure_openai_api_key) == "" ? {} : { azure_openai_api_key = true }
 
     content {
       name  = "azure-openai-api-key"
-      value = secret.value
+      value = var.azure_openai_api_key
     }
   }
 
@@ -220,7 +220,7 @@ resource "azurerm_container_app" "backend" {
       }
 
       dynamic "env" {
-        for_each = var.azure_openai_api_key == "" ? [] : [1]
+        for_each = nonsensitive(var.azure_openai_api_key) == "" ? {} : { azure_openai_api_key = true }
 
         content {
           name        = "AZURE_OPENAI_API_KEY"
