@@ -86,6 +86,10 @@ class AssessmentSession(Base):
         back_populates="session",
         cascade="all, delete-orphan",
     )
+    heart_plan: Mapped["HeartPlanRecommendation | None"] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+    )
 
 
 class AssessmentAnswer(Base):
@@ -152,6 +156,28 @@ class AIReport(Base):
     )
 
     session: Mapped[AssessmentSession] = relationship(back_populates="report")
+
+
+class HeartPlanRecommendation(Base):
+    __tablename__ = "heart_plan_recommendations"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("assessment_sessions.id"),
+        unique=True,
+        nullable=False,
+    )
+    sections: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
+    disclaimer: Mapped[str] = mapped_column(Text, nullable=False)
+    generated_by: Mapped[str] = mapped_column(String, nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    data_classification: Mapped[str] = mapped_column(
+        String,
+        default=DataClassification.SENSITIVE_HEALTH,
+        nullable=False,
+    )
+
+    session: Mapped[AssessmentSession] = relationship(back_populates="heart_plan")
 
 
 class ContentItem(Base):

@@ -10,5 +10,5 @@ azure_openai_api_version     = "2024-12-01-preview"
 
 tags = {
   "cost-center" = "side-projects"
-  "data-class"  = "prototype-sensitive"
+  "data-class"  = "sensitive-health"
 }

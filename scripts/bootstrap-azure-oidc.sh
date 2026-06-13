@@ -4,7 +4,7 @@ set -euo pipefail
 subscription_id="${SUBSCRIPTION_ID:-ced09ae9-74a6-4f40-936f-d2eef2b577b9}"
 tenant_id="${TENANT_ID:-98983dd6-f1f1-40e3-91f8-2bbf22020202}"
 location="${LOCATION:-eastus2}"
-repository="${REPOSITORY:-danseery/heart-health-prototype}"
+repository="${REPOSITORY:-danseery/hearty}"
 environment_name="${ENVIRONMENT_NAME:-dev}"
 state_resource_group_name="${STATE_RESOURCE_GROUP_NAME:-rg-heart-health-tfstate}"
 state_container_name="${STATE_CONTAINER_NAME:-tfstate}"

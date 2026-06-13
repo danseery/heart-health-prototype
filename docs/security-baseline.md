@@ -1,11 +1,11 @@
 # Security Baseline
 
-The prototype is local-only, but it starts with production-shaped security boundaries so we do not have to retrofit them later.
+The app is local-first, with production-shaped security boundaries so we do not have to retrofit them later.
 
 ## Data Handling
 
 - Assessment answers, risk results, AI reports, and chat messages are treated as sensitive health data.
-- Demo seed data must be synthetic.
+- Seed data must be synthetic.
 - Sensitive payloads should stay behind backend repository/service methods.
 - Logs and audit events must not include raw health values, AI prompts, chat transcripts, secrets, or tokens.
 
@@ -15,7 +15,7 @@ The prototype is local-only, but it starts with production-shaped security bound
 - CORS is limited to local frontend origins by default.
 - Security headers are added by middleware.
 - Error responses should be structured and should not expose stack traces.
-- Ownership checks should be implemented even for demo users.
+- Ownership checks should be implemented for open-session users.
 
 ## AI Controls
 

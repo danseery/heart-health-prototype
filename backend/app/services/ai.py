@@ -52,7 +52,7 @@ def generate_assessment_summary(
             return generate_azure_assessment_summary(answers, risk, active_settings)
         except Exception:
             logger.exception(
-                "AI summary provider failed provider=azure_openai fallback=dummy"
+                "AI summary provider failed provider=azure_openai using=local"
             )
             return generate_dummy_assessment_summary(answers, risk)
     if provider == "dummy":

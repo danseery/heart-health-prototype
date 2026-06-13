@@ -3,7 +3,7 @@ param(
     [string]$SubscriptionId = "ced09ae9-74a6-4f40-936f-d2eef2b577b9",
     [string]$TenantId = "98983dd6-f1f1-40e3-91f8-2bbf22020202",
     [string]$Location = "eastus2",
-    [string]$Repository = "danseery/heart-health-prototype",
+    [string]$Repository = "danseery/hearty",
     [string]$EnvironmentName = "dev",
     [string]$StateResourceGroupName = "rg-heart-health-tfstate",
     [string]$StateContainerName = "tfstate",

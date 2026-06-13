@@ -10,6 +10,7 @@ The concept centers on a free heart health risk assessment that uses established
 - Calculate and explain risk signals such as ASCVD 10-year risk, Framingham risk, CHA2DS2-VASc inputs, heart age, blood pressure, cholesterol, and lifestyle factors.
 - Present results in a dashboard that is easy to scan, color-coded, and suitable to save or share with a doctor.
 - Provide plain-English AI summaries that explain risk factors without replacing medical advice.
+- Generate an open Heart Plan with nutrition, fitness, and lifestyle education grounded in cardiology source priorities.
 - Build a subscription content library with cardiologist-authored videos and guides on topics such as AFib, cholesterol, hypertension, test results, heart failure, and prevention.
 - Offer a RAG-powered AI health coach that answers subscriber questions using curated source material and cites the underlying content.
 - Support a simple monetization model with a free tier, a premium monthly plan, and a one-time detailed report.
@@ -49,6 +50,7 @@ This repository is a product workspace for the HeartHealth AI concept and websit
 See [local development](docs/local-development.md) and [security baseline](docs/security-baseline.md).
 See [Azure dev deployment](docs/deployment.md) for the infrastructure and CI/CD setup.
 See [bootstrap checklist](docs/bootstrap-checklist.md) for tools and sign-ins required after cloning.
+See [product reference docs](docs/reference/README.md) for the original proposal and mockup PDFs.
 
 ## Local Run
 

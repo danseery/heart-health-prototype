@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { Apple, ArrowRight, Dumbbell, Moon } from "lucide-react";
 
 import { normalizeNumberInput } from "./riskDisplay";
-import type { ClinicalSignal } from "./types";
+import type {
+  ClinicalSignal,
+  HeartPlanCard,
+  HeartPlanCitation,
+  HeartPlanResponse,
+  HeartPlanSection,
+  LearningResource,
+} from "./types";
 
 export function ThemeToggle(props: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (
@@ -83,7 +90,6 @@ export function OptionalNumberField(props: {
           type="text"
           inputMode="decimal"
           value={draftValue}
-          placeholder="Optional"
           onChange={(event) => {
             const nextValue = event.target.value;
             const normalized = normalizeNumberInput(nextValue);
@@ -200,4 +206,261 @@ export function SignalSection(props: {
       ))}
     </section>
   );
+}
+
+export function HeartPlan(props: {
+  plan: HeartPlanResponse | null;
+  isLoading: boolean;
+  error: string | null;
+  loadingContentId: string | null;
+  onOpenCitation: (citation: HeartPlanCitation) => void;
+  onOpenLearningResource: (resource: LearningResource) => void;
+}) {
+  const [activeSection, setActiveSection] = useState("all");
+  const [activePriority, setActivePriority] = useState("all");
+  const sections = props.plan?.sections ?? [];
+  const sourceList = uniqueLearningResources(sections);
+  const streamItems = sections.flatMap((section) =>
+    section.cards.map((card) => ({ section, card })),
+  );
+  const visibleItems = streamItems.filter((item) => {
+    const sectionMatches = activeSection === "all" || item.section.section === activeSection;
+    const priorityMatches = activePriority === "all" || item.card.priority === activePriority;
+    return sectionMatches && priorityMatches;
+  });
+  const highPriorityCount = streamItems.filter((item) => item.card.priority === "high").length;
+  const sectionItems =
+    activeSection === "all"
+      ? streamItems
+      : streamItems.filter((item) => item.section.section === activeSection);
+  const availablePriorities = new Set(sectionItems.map((item) => item.card.priority));
+  const priorities = [
+    ["all", "Any priority"],
+    ["high", "High"],
+    ["medium", "Medium"],
+    ["low", "Low"],
+  ];
+
+  useEffect(() => {
+    if (activePriority !== "all" && !availablePriorities.has(activePriority)) {
+      setActivePriority("all");
+    }
+  }, [activePriority, availablePriorities]);
+
+  if (props.isLoading) {
+    return (
+      <section className="heart-plan" aria-label="Personalized Heart Plan">
+        <div className="heart-plan-heading">
+          <div>
+            <span>Personalized Heart Plan</span>
+            <h3>Preparing nutrition, fitness, and lifestyle guidance...</h3>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (props.error) {
+    return (
+      <section className="heart-plan" aria-label="Personalized Heart Plan">
+        <div className="heart-plan-heading">
+          <div>
+            <span>Personalized Heart Plan</span>
+            <h3>Recommendations are temporarily unavailable.</h3>
+            <p>{props.error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!props.plan) return null;
+
+  return (
+    <section className="heart-plan" aria-label="Personalized Heart Plan">
+      <div className="heart-plan-heading">
+        <div>
+          <span>Heart Plan</span>
+          <h3>Your next cardiology learning path</h3>
+          <p>
+            Start with the highest-signal items, then dip into nutrition, fitness, or
+            lifestyle when you want specifics.
+          </p>
+        </div>
+      </div>
+
+      <div className="plan-briefing-strip" aria-label="Heart Plan summary">
+        <div>
+          <strong>{streamItems.length}</strong>
+          <span>learning items</span>
+        </div>
+        <div>
+          <strong>{highPriorityCount}</strong>
+          <span>high priority</span>
+        </div>
+        <div>
+          <strong>{sourceList.length}</strong>
+          <span>Sources</span>
+        </div>
+      </div>
+
+      <div className="filter-bar filter-bar--compact" aria-label="Heart Plan filters">
+        <label className="compact-filter" aria-label="Heart Plan focus filter">
+          <span>Focus</span>
+          <select
+            value={activeSection}
+            onChange={(event) => setActiveSection(event.target.value)}
+          >
+            <option value="all">All</option>
+            {sections.map((section) => (
+              <option key={section.section} value={section.section}>
+                {section.title}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="compact-filter" aria-label="Heart Plan priority filter">
+          <span>Priority</span>
+          <select
+            value={activePriority}
+            onChange={(event) => setActivePriority(event.target.value)}
+          >
+            {priorities.map(([value, label]) => (
+              <option
+                key={value}
+                value={value}
+                disabled={value !== "all" && !availablePriorities.has(value)}
+              >
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {visibleItems.length === 0 ? (
+        <p className="empty-filter-state">No items match these filters.</p>
+      ) : null}
+
+      <div className="plan-stream">
+        {visibleItems.map(({ section, card }, index) => (
+          <article
+            className={`plan-stream-item priority-${card.priority}`}
+            key={`${section.section}-${card.title}`}
+          >
+            <div className="stream-index">{String(index + 1).padStart(2, "0")}</div>
+            <div className="stream-body">
+              <div className="stream-meta">
+                <span className={`section-pill section-${section.section}`}>
+                  <SectionIcon section={section.section} />
+                  {section.title}
+                </span>
+                <span className={`priority-label priority-${card.priority}`}>
+                  {card.priority}
+                </span>
+              </div>
+              <h4>{card.title}</h4>
+              <p>{card.why_it_matters}</p>
+              <LearningFocus
+                card={card}
+                onOpenLearningResource={props.onOpenLearningResource}
+              />
+              <div className="stream-footer">
+                <span>{card.clinician_question}</span>
+                <InlineSourceButton
+                  card={card}
+                  loadingContentId={props.loadingContentId}
+                  onOpenCitation={props.onOpenCitation}
+                />
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="source-shelf source-shelf--footer" aria-label="Sources used">
+        <div>
+          <span>Sources used</span>
+          <small>Curated cardiology resources</small>
+        </div>
+        <div>
+          {sourceList.map((citation) => (
+            <button
+              key={citation.resource_id}
+              type="button"
+              onClick={() => props.onOpenLearningResource(citation)}
+            >
+              {citation.title}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="disclaimer" aria-label="Disclaimer">
+        <span>Disclaimer</span>
+        <p>{props.plan.disclaimer}</p>
+      </div>
+    </section>
+  );
+}
+
+function SectionIcon(props: { section: HeartPlanSection["section"] }) {
+  if (props.section === "fitness") return <Dumbbell size={16} aria-hidden="true" />;
+  if (props.section === "lifestyle") return <Moon size={16} aria-hidden="true" />;
+  return <Apple size={16} aria-hidden="true" />;
+}
+
+function InlineSourceButton(props: {
+  card: HeartPlanCard;
+  loadingContentId: string | null;
+  onOpenCitation: (citation: HeartPlanCitation) => void;
+}) {
+  const primarySource = props.card.citations[0];
+  if (!primarySource) return null;
+
+  return (
+    <button type="button" onClick={() => props.onOpenCitation(primarySource)}>
+      {props.loadingContentId === primarySource.source_id ? "Loading..." : "Source"}
+    </button>
+  );
+}
+
+function LearningFocus(props: {
+  card: HeartPlanCard;
+  onOpenLearningResource: (resource: LearningResource) => void;
+}) {
+  const resource = props.card.learning_resource;
+  if (!resource) {
+    return (
+      <div className="next-step">
+        <span>Learning focus</span>
+        <p>{props.card.educational_next_step}</p>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className="next-step next-step--link"
+      type="button"
+      onClick={() => props.onOpenLearningResource(resource)}
+    >
+      <span>Learning focus</span>
+      <p>{props.card.educational_next_step}</p>
+      <small>{resource.title}</small>
+    </button>
+  );
+}
+
+function uniqueLearningResources(sections: HeartPlanSection[]) {
+  const resources = new Map<string, LearningResource>();
+  for (const section of sections) {
+    for (const card of section.cards) {
+      if (card.learning_resource) {
+        resources.set(card.learning_resource.resource_id, card.learning_resource);
+      }
+    }
+  }
+  return [...resources.values()];
 }
