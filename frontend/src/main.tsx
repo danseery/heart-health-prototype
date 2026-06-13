@@ -20,7 +20,7 @@ import {
   heartAgeTone,
 } from "./riskDisplay";
 import "./styles.css";
-import { applyTheme, loadSavedTheme, saveTheme, type ThemeName } from "./theme";
+import { applyTheme, resolveInitialTheme, saveTheme, type ThemeName } from "./theme";
 import type {
   AssessmentAnswers,
   ContentSummary,
@@ -145,7 +145,7 @@ function App() {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AssessmentAnswers, string>>>(
     {},
   );
-  const [theme, setTheme] = useState<ThemeName>(() => loadSavedTheme() ?? "light");
+  const [theme, setTheme] = useState<ThemeName>(() => resolveInitialTheme());
   const [scoreInsight, setScoreInsight] = useState<ScoreInsight | null>(null);
 
   React.useEffect(() => {

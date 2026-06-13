@@ -2,7 +2,9 @@
 
 HeartHealth AI is a cardiologist-reviewed heart health platform concept that helps people understand their cardiac risk scores, learn what their numbers mean, and find trustworthy next steps in plain English.
 
-The concept centers on a free heart health risk assessment that uses established clinical calculators, then converts the results into an accessible AI-generated educational report grounded in content reviewed by Dr. Brian Chen, DO.
+The concept centers on a free heart health risk assessment that uses established clinical calculators, then converts the results into an accessible AI-generated educational report grounded in content reviewed by a physician.
+
+Dev URL: https://ca-heart-health-dev-web.bravetree-a97c5474.eastus2.azurecontainerapps.io/
 
 ## Goals
 

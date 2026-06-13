@@ -88,6 +88,14 @@ It does not create or store a client secret. GitHub Actions uses short-lived OID
 
 After bootstrap, run the `Deploy dev` workflow in GitHub Actions. It also runs automatically on pushes to `main` that touch app, infrastructure, or deploy workflow files.
 
+Dev deploys are guarded so they only run for GitHub pull request merge commits
+on `main`. Direct pushes to `main` fail the `Main branch guard` workflow and the
+deploy workflow exits before provisioning or deploying anything. GitHub
+server-side branch protection is still preferred when available; GitHub returned
+a plan restriction for this private repository when rulesets/branch protection
+were attempted. To keep the guard deterministic, repository settings should
+allow merge commits and disable squash/rebase merging.
+
 The workflow expects these GitHub environment variables in the `dev` environment:
 
 - `AZURE_CLIENT_ID`

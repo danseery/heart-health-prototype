@@ -1,0 +1,28 @@
+name: Main branch guard
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  require-pr:
+    name: Require PR-associated main updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block non-PR-merge pushes to main
+        env:
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${HEAD_COMMIT_MESSAGE}" =~ ^Merge\ pull\ request\ #[0-9]+ ]]; then
+            echo "::error::Direct pushes to main are not allowed. Open a pull request and use GitHub's merge-commit option."
+            exit 1
+          fi
+
+          echo "Main update came from a GitHub pull request merge commit."
