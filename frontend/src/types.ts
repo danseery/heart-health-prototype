@@ -67,3 +67,46 @@ export type ContentSummary = {
   summary: string;
   cached: boolean;
 };
+
+export type HeartPlanCitation = {
+  title: string;
+  source_id: string;
+  author: string;
+  source_url?: string | null;
+};
+
+export type LearningResource = {
+  resource_id: string;
+  title: string;
+  source: string;
+  url: string;
+  topic: string;
+  applies_to: string[];
+  priority: number;
+};
+
+export type HeartPlanCard = {
+  title: string;
+  priority: "high" | "medium" | "low" | string;
+  trigger_signals: string[];
+  why_it_matters: string;
+  educational_next_step: string;
+  learning_resource: LearningResource;
+  clinician_question: string;
+  citations: HeartPlanCitation[];
+  disclaimer: string;
+};
+
+export type HeartPlanSection = {
+  section: "nutrition" | "fitness" | "lifestyle" | string;
+  title: string;
+  cards: HeartPlanCard[];
+};
+
+export type HeartPlanResponse = {
+  session_id: string;
+  sections: HeartPlanSection[];
+  generated_by: string;
+  cached: boolean;
+  disclaimer: string;
+};

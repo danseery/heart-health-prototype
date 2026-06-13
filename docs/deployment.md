@@ -1,6 +1,6 @@
 # Azure Dev Deployment
 
-This project uses Terraform and GitHub Actions to create a repeatable Azure dev environment. The dev environment is intentionally production-shaped, but it is still a prototype environment and should not store real patient data yet.
+This project uses Terraform and GitHub Actions to create a repeatable Azure dev environment. The dev environment is intentionally production-shaped and should not store real patient data yet.
 
 ## Resource Group Naming
 
@@ -113,7 +113,7 @@ OpenAI deployment name the backend should use. Dev currently uses `gpt-5.4`.
 The deploy workflow intentionally does not infer a deployment from the Azure
 account because multiple chat, embedding, or test deployments may exist. The
 workflow passes this as an explicit Terraform `-var` so it overrides the blank
-placeholder value kept in `infra/terraform/environments/dev.tfvars`.
+deployment value kept in `infra/terraform/environments/dev.tfvars`.
 
 No Big Brain API key is stored in GitHub secrets. After GitHub Actions signs in
 to Azure with OIDC, the deploy workflow reads the key with Azure CLI, masks it in

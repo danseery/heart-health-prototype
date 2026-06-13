@@ -1,6 +1,6 @@
 # Local Development
 
-This prototype still supports local-first development. Do not use real patient data locally or in the dev Azure environment.
+This app supports local-first development. Do not use real patient data locally or in the dev Azure environment.
 
 ## Backend
 

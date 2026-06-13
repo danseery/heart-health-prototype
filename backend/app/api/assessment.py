@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.db.init_db import OPEN_SESSION_USER_ID
 from app.core.config import get_settings
-from app.db.init_db import DEMO_USER_ID
 from app.db.session import get_db
 from app.models import (
     AIReport,
@@ -55,16 +55,16 @@ def get_questions() -> list[AssessmentQuestion]:
 
 @router.post("/sessions", response_model=AssessmentSessionResponse, status_code=status.HTTP_201_CREATED)
 def create_session(db: Session = Depends(get_db)) -> AssessmentSessionResponse:
-    session = AssessmentSession(id=new_id("assess"), user_id=DEMO_USER_ID)
+    session = AssessmentSession(id=new_id("assess"), user_id=OPEN_SESSION_USER_ID)
     db.add(session)
     db.add(
         AuditEvent(
             id=new_id("audit"),
-            user_id=DEMO_USER_ID,
+            user_id=OPEN_SESSION_USER_ID,
             event_type="assessment_started",
             entity_type="assessment_session",
             entity_id=session.id,
-            event_metadata={"mode": "demo"},
+            event_metadata={"mode": "open"},
         )
     )
     db.commit()
@@ -77,7 +77,7 @@ def save_answers(
     payload: AnswerPayload,
     db: Session = Depends(get_db),
 ) -> AssessmentAnswersResponse:
-    session = _get_demo_session(db, session_id)
+    session = _get_open_session(db, session_id)
     if session.status == AssessmentStatus.COMPLETED:
         raise HTTPException(status_code=409, detail="Assessment is already completed.")
 
@@ -98,7 +98,7 @@ def save_answers(
 
 @router.post("/sessions/{session_id}/complete", response_model=ResultResponse)
 def complete_session(session_id: str, db: Session = Depends(get_db)) -> ResultResponse:
-    session = _get_demo_session(db, session_id)
+    session = _get_open_session(db, session_id)
     answers = _answers_for_session(db, session_id)
     risk = calculate_risk(answers)
     settings = get_settings()
@@ -143,7 +143,7 @@ def complete_session(session_id: str, db: Session = Depends(get_db)) -> ResultRe
     db.add(
         AuditEvent(
             id=new_id("audit"),
-            user_id=DEMO_USER_ID,
+            user_id=OPEN_SESSION_USER_ID,
             event_type="assessment_completed",
             entity_type="assessment_session",
             entity_id=session_id,
@@ -158,7 +158,7 @@ def complete_session(session_id: str, db: Session = Depends(get_db)) -> ResultRe
 
 @router.get("/results/{session_id}", response_model=ResultResponse)
 def get_result(session_id: str, db: Session = Depends(get_db)) -> ResultResponse:
-    session = _get_demo_session(db, session_id)
+    session = _get_open_session(db, session_id)
     result = db.scalar(select(RiskResult).where(RiskResult.session_id == session_id))
     report = db.scalar(select(AIReport).where(AIReport.session_id == session_id))
     if not result or not report:
@@ -166,9 +166,9 @@ def get_result(session_id: str, db: Session = Depends(get_db)) -> ResultResponse
     return _result_response(session, result, report)
 
 
-def _get_demo_session(db: Session, session_id: str) -> AssessmentSession:
+def _get_open_session(db: Session, session_id: str) -> AssessmentSession:
     session = db.get(AssessmentSession, session_id)
-    if not session or session.user_id != DEMO_USER_ID:
+    if not session or session.user_id != OPEN_SESSION_USER_ID:
         raise HTTPException(status_code=404, detail="Assessment session not found.")
     return session
 

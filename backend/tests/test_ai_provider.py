@@ -144,7 +144,7 @@ def test_big_brain_foundry_endpoint_uses_models_chat_route() -> None:
     assert api_version == "2024-05-01-preview"
 
 
-def test_azure_openai_failure_falls_back_to_dummy_summary(monkeypatch, caplog) -> None:
+def test_azure_openai_failure_uses_local_summary(monkeypatch, caplog) -> None:
     class FakeClient:
         def __init__(self, timeout: float) -> None:
             return None
@@ -199,4 +199,4 @@ def test_azure_openai_failure_falls_back_to_dummy_summary(monkeypatch, caplog) -
 
     assert "Your estimated 10-year ASCVD-style risk is 5.9%" in report["summary"]
     assert report["disclaimer"] == ai.EDUCATIONAL_DISCLAIMER
-    assert "AI summary provider failed provider=azure_openai fallback=dummy" in caplog.text
+    assert "AI summary provider failed provider=azure_openai using=local" in caplog.text

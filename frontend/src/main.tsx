@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { Activity, HeartPulse, ShieldCheck, X } from "lucide-react";
 
 import {
+  HeartPlan,
   NumberField,
   OptionalCheckbox,
   OptionalNumberField,
@@ -20,7 +21,14 @@ import {
 } from "./riskDisplay";
 import "./styles.css";
 import { applyTheme, resolveInitialTheme, saveTheme, type ThemeName } from "./theme";
-import type { AssessmentAnswers, ContentSummary, ResultResponse } from "./types";
+import type {
+  AssessmentAnswers,
+  ContentSummary,
+  HeartPlanCitation,
+  HeartPlanResponse,
+  LearningResource,
+  ResultResponse,
+} from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
 
@@ -127,10 +135,13 @@ function buildScoreInsight(
 function App() {
   const [answers, setAnswers] = useState<AssessmentAnswers>(initialAnswers);
   const [result, setResult] = useState<ResultResponse | null>(null);
+  const [heartPlan, setHeartPlan] = useState<HeartPlanResponse | null>(null);
   const [contentSummary, setContentSummary] = useState<ContentSummary | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingHeartPlan, setIsLoadingHeartPlan] = useState(false);
   const [loadingContentId, setLoadingContentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [heartPlanError, setHeartPlanError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof AssessmentAnswers, string>>>(
     {},
   );
@@ -178,6 +189,8 @@ function App() {
 
     setIsSubmitting(true);
     setError(null);
+    setHeartPlan(null);
+    setHeartPlanError(null);
     setFieldErrors({});
     try {
       const sessionResponse = await fetch(`${API_BASE}/assessment/sessions`, {
@@ -201,11 +214,27 @@ function App() {
         { method: "POST" },
       );
       if (!resultResponse.ok) throw new Error("Could not calculate results.");
-      setResult((await resultResponse.json()) as ResultResponse);
+      const nextResult = (await resultResponse.json()) as ResultResponse;
+      setResult(nextResult);
+      void loadHeartPlan(nextResult.session_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function loadHeartPlan(sessionId: string) {
+    setIsLoadingHeartPlan(true);
+    setHeartPlanError(null);
+    try {
+      const response = await fetch(`${API_BASE}/recommendations/sessions/${sessionId}`);
+      if (!response.ok) throw new Error("Could not load Heart Plan recommendations.");
+      setHeartPlan((await response.json()) as HeartPlanResponse);
+    } catch (err) {
+      setHeartPlanError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsLoadingHeartPlan(false);
     }
   }
 
@@ -229,6 +258,18 @@ function App() {
     } finally {
       setLoadingContentId(null);
     }
+  }
+
+  function openHeartPlanCitation(citation: HeartPlanCitation) {
+    if (citation.source_url) {
+      window.open(citation.source_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    void openContentSummary(citation.source_id);
+  }
+
+  function openLearningResource(resource: LearningResource) {
+    window.open(resource.url, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -538,19 +579,6 @@ function App() {
                 </div>
                 <p className="disclaimer">{result.ai_report.disclaimer}</p>
 
-                {contentSummary ? (
-                  <aside className="content-summary content-summary--inline">
-                    <div>
-                      <span>{contentSummary.topic}</span>
-                      <button type="button" onClick={() => setContentSummary(null)}>
-                        Close
-                      </button>
-                    </div>
-                    <h3>{contentSummary.title}</h3>
-                    <p>{contentSummary.summary}</p>
-                    <small>{contentSummary.author}</small>
-                  </aside>
-                ) : null}
               </div>
 
               <div className="signal-grid">
@@ -566,6 +594,15 @@ function App() {
                   variant="risk"
                 />
               </div>
+
+              <HeartPlan
+                plan={heartPlan}
+                isLoading={isLoadingHeartPlan}
+                error={heartPlanError}
+                loadingContentId={loadingContentId}
+                onOpenCitation={openHeartPlanCitation}
+                onOpenLearningResource={openLearningResource}
+              />
             </>
           ) : (
             <div className="empty-state">
@@ -601,6 +638,31 @@ function App() {
             <h2 id="score-insight-title">{scoreInsight.title}</h2>
             <p>{scoreInsight.body}</p>
             <p className="modal-note">{scoreInsight.note}</p>
+          </section>
+        </div>
+      ) : null}
+
+      {contentSummary ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setContentSummary(null)}>
+          <section
+            className="insight-modal source-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="source-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label="Close source summary"
+              onClick={() => setContentSummary(null)}
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+            <span>{contentSummary.topic}</span>
+            <h2 id="source-modal-title">{contentSummary.title}</h2>
+            <p>{contentSummary.summary}</p>
+            <p className="modal-note">{contentSummary.author}</p>
           </section>
         </div>
       ) : null}

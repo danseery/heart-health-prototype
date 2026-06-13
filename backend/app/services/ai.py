@@ -62,7 +62,7 @@ def generate_assessment_summary(
             return _with_generation_metadata(report, "azure_openai", include_metadata)
         except Exception:
             logger.exception(
-                "AI summary provider failed provider=azure_openai fallback=dummy"
+                "AI summary provider failed provider=azure_openai using=local"
             )
             report = generate_dummy_assessment_summary(answers, risk)
             return _with_generation_metadata(report, "dummy", include_metadata)

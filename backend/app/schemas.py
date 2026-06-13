@@ -85,6 +85,17 @@ class Citation(BaseModel):
     title: str
     source_id: str
     author: str
+    source_url: str | None = None
+
+
+class LearningResource(BaseModel):
+    resource_id: str
+    title: str
+    source: str
+    url: str
+    topic: str
+    applies_to: list[str]
+    priority: int
 
 
 class ContentSummaryResponse(BaseModel):
@@ -100,6 +111,32 @@ class AIReportResponse(BaseModel):
     summary: str
     disclaimer: str
     citations: list[Citation]
+
+
+class HeartPlanCard(BaseModel):
+    title: str
+    priority: str
+    trigger_signals: list[str]
+    why_it_matters: str
+    educational_next_step: str
+    learning_resource: LearningResource
+    clinician_question: str
+    citations: list[Citation]
+    disclaimer: str
+
+
+class HeartPlanSection(BaseModel):
+    section: str
+    title: str
+    cards: list[HeartPlanCard]
+
+
+class HeartPlanResponse(BaseModel):
+    session_id: str
+    sections: list[HeartPlanSection]
+    generated_by: str
+    cached: bool
+    disclaimer: str
 
 
 class ResultResponse(BaseModel):
